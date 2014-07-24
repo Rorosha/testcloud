@@ -1,0 +1,7 @@
+Host testCloud
+  HostName localhost
+  Port 2222
+  User fedora
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+  PubkeyAuthentication no
