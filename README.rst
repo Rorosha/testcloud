@@ -40,12 +40,12 @@ Testing
 Currently there is no testsuite for this script. If it proves useful to someone
 else, then we can make one. The best means of ensuring the code works and it's
 not your image, is to test against the latest Fedora Cloud release image. Download
-a qcow2 image from `here<http://cloud.fedoraproject.org/>`_.
+a qcow2 image from `here <http://cloud.fedoraproject.org/>`_.
 
 Credit
 ------
 
-Thanks to `Oddshocks<https://github.com/oddshocks>`_ for the koji downloader code :)
+Thanks to `Oddshocks <https://github.com/oddshocks>`_ for the koji downloader code :)
 
 License
 -------
