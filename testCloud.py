@@ -245,7 +245,8 @@ def create_dirs():
 
 def clean_dirs():
     """Remove dirs after a test run."""
-    shutil.rmtree('/tmp/testCloud')
+    if os.path.exists('/tmp/testCloud'):
+        shutil.rmtree('/tmp/testCloud')
     return "All cleaned up!"
 
 def main():
