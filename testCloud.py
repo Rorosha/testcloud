@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright 2014, Red Hat, Inc.
 # License: GPL-2.0+ <http://spdx.org/licenses/GPL-2.0+>
@@ -167,7 +168,7 @@ def download_initrd_and_kernel(qcow2_image, path):
 
     return result
 
-def boot_image(qcow2, initrd, kernel, seed, ram=1024, graphics=False):
+def boot_image(qcow2, initrd, kernel, seed, ram=1024, graphics=False, vnc=False):
     """Boot the cloud image redirecting local port 8888 to 80 on the vm as 
     well as local port 2222 to 22 on the vm so http and ssh can be accessed."""
 
@@ -193,6 +194,9 @@ def boot_image(qcow2, initrd, kernel, seed, ram=1024, graphics=False):
     if graphics:
         boot_args.append('-nographic')
 
+    if vnc:
+        boot_args.extend(['-vnc', '0.0.0.0:1'])
+
     vm = subprocess.Popen(boot_args)
 
     print "Successfully booted your local cloud image!"
@@ -200,7 +204,7 @@ def boot_image(qcow2, initrd, kernel, seed, ram=1024, graphics=False):
 
     return vm
 
-def build_and_run(image_url, ram=1024, graphics=False):
+def build_and_run(image_url, ram=1024, graphics=False, vnc=False):
     """Run through all the steps."""
 
     print "cleaning and creating dirs..."
@@ -234,7 +238,8 @@ def build_and_run(image_url, ram=1024, graphics=False):
                     external['kernel'], 
                     base_path + '/seed.img', 
                     ram=ram,
-                    graphics=graphics)
+                    graphics=graphics,
+                    vnc=vnc)
 
     return vm
 
@@ -245,7 +250,8 @@ def create_dirs():
 
 def clean_dirs():
     """Remove dirs after a test run."""
-    shutil.rmtree('/tmp/testCloud')
+    if os.path.exists('/tmp/testCloud'):
+        shutil.rmtree('/tmp/testCloud')
     return "All cleaned up!"
 
 def main():
@@ -262,14 +268,21 @@ def main():
     parser.add_argument("--no-graphic",
                         help="Turn off graphical display.",
                         action="store_true")
+    parser.add_argument("--vnc",
+                        help="Turns on vnc at :1 to the instance.",
+                        action="store_true")
     args = parser.parse_args()
 
     gfx = False
+    vnc = False
 
     if args.no_graphic:
         gfx = True
-        
-    build_and_run(args.url, args.ram, graphics=gfx)
+
+    if args.vnc:
+        vnc = True
+
+    build_and_run(args.url, args.ram, graphics=gfx, vnc=vnc)
 
 if __name__ == '__main__':
     main()
