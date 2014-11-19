@@ -17,11 +17,13 @@ Usage
 
     python testCloud.py <url for qcow2 image>
 
-There are currently only two options (both optional) you can use when invoking
-this script: '--ram' and '--no-graphic'
+There are currently only three options (all optional) you can use when invoking
+this script: '--ram', '--no-graphic' and '--atomic'.
 
-The --ram option takes an int for how much ram you want the guest to have and 
-the --no-graphic option is merely a flag to suppress a GUI from appearing.
+The --ram option takes an int for how much ram you want the guest to have, 
+the --no-graphic option is merely a flag to suppress a GUI from appearing and
+the --atomic option indicates that you wish to boot an 
+`Atomic <http://projectatomic.io>`_ host.
 
 Once the image has booted, you can log in from the GUI or ssh. To log in with 
 ssh, run the following command:
