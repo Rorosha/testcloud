@@ -77,20 +77,31 @@ def koji_download(urls):
             print "Problem writing to {}.".format(config.LOCAL_DOWNLOAD_DIR)
             print "Make sure to run this service with root permissions."
 
+def expand_qcow(image, size="+10G"):
+    """Expand the storage for a qcow image. Currently only used for Atomic
+    Hosts."""
 
-def create_user_data(path, password, overwrite=False):
+    subprocess.call(['qemu-img',
+	    	     'resize',
+		     image,
+		     size])
+
+    print "Resized image for Atomic testing..."
+    return
+
+def create_user_data(path, password, overwrite=False, atomic=False):
     """Save the right  password to the 'user-data' file needed to 
     emulate cloud-init. Default username on cloud images is "fedora"
 
     Will not overwrite an existing user-data file unless
     the overwrite kwarg is set to True."""
 
-    file_data = """#cloud-config
-password: %s
-chpasswd: { expire: False }
-ssh_pwauth: True
-""" % password
+    if atomic:
+	file_data = config.ATOMIC_USER_DATA % password
 
+    else:
+        file_data = config.USER_DATA % password
+    
     if os.path.isfile(path + '/meta/user-data'):
         if overwrite:
         
@@ -113,10 +124,8 @@ def create_meta_data(path, hostname, overwrite=False):
     Will not overwrite an existing user-data file unless
     the overwrite kwarg is set to True."""
 
-    file_data = """instance-id: iid-123456
-local-hostname: %s
-""" % hostname
-
+    file_data = config.META_DATA % hostname
+    
     if os.path.isfile(path + '/meta/meta-data'):
         if overwrite:
         
@@ -168,7 +177,9 @@ def download_initrd_and_kernel(qcow2_image, path):
 
     return result
 
-def boot_image(qcow2, initrd, kernel, seed, ram=1024, graphics=False, vnc=False):
+def boot_image(
+	qcow2, seed, initrd=None, kernel=None, ram=1024, graphics=False,
+	vnc=False, atomic=False):
     """Boot the cloud image redirecting local port 8888 to 80 on the vm as 
     well as local port 2222 to 22 on the vm so http and ssh can be accessed."""
 
@@ -179,20 +190,23 @@ def boot_image(qcow2, initrd, kernel, seed, ram=1024, graphics=False, vnc=False)
                  'file=%s,if=virtio' % qcow2,
                  '-drive',
                  'file=%s,if=virtio' % seed,
-                 '-kernel',
-                 '%s' % kernel,
-                 '-initrd',
-                 '%s' % initrd,
-                 '-append',
-                 'root=/dev/vda1 ro ds=nocloud-net',
-                 '-redir',
+                '-redir',
                  'tcp:2222::22',
                  '-redir',
                  'tcp:8888::80',
     ]
 
+    if not atomic:
+	boot_args.extend(['-kernel',
+                 	'%s' % kernel,
+                 	'-initrd',
+                 	'%s' % initrd,
+                 	'-append',
+                 	'root=/dev/vda1 ro ds=nocloud-net'
+			])
+
     if graphics:
-        boot_args.append('-nographic')
+        boot_args.extend(['-nographic'])
 
     if vnc:
         boot_args.extend(['-vnc', '0.0.0.0:1'])
@@ -204,7 +218,8 @@ def boot_image(qcow2, initrd, kernel, seed, ram=1024, graphics=False, vnc=False)
 
     return vm
 
-def build_and_run(image_url, ram=1024, graphics=False, vnc=False):
+def build_and_run(
+	image_url, ram=1024, graphics=False, vnc=False, atomic=False):
     """Run through all the steps."""
 
     print "cleaning and creating dirs..."
@@ -215,7 +230,7 @@ def build_and_run(image_url, ram=1024, graphics=False, vnc=False):
 
     # Create cloud-init data
     print "Creating meta-data..."
-    create_user_data(base_path, "passw0rd")
+    create_user_data(base_path, "passw0rd", atomic=atomic)
     create_meta_data(base_path, "testCloud")
 
     create_seed_img(base_path + '/meta', base_path)
@@ -227,19 +242,31 @@ def build_and_run(image_url, ram=1024, graphics=False, vnc=False):
     if not os.path.isfile(image_file):
         print "downloading new image..."
         image = koji_download([image_url])[0]
+
+	if atomic:
+		expand_qcow(image)
     else:
         print "using existing image..."
         image = image_file
 
-    external = download_initrd_and_kernel(image, base_path)
+    if not atomic:
+	external = download_initrd_and_kernel(image, base_path)
 
-    vm = boot_image(image, 
-                    external['initrd'], 
-                    external['kernel'], 
-                    base_path + '/seed.img', 
-                    ram=ram,
-                    graphics=graphics,
-                    vnc=vnc)
+    if atomic:
+	vm = boot_image(image,
+			base_path + '/seed.img',
+			ram=ram,
+			graphics=graphics,
+			vnc=vnc,
+			atomic=atomic)
+    else:
+    	vm = boot_image(image, 
+                    	base_path + '/seed.img',
+		    	external['initrd'], 
+                    	external['kernel'], 
+                    	ram=ram,
+                    	graphics=graphics,
+                    	vnc=vnc)
 
     return vm
 
@@ -271,10 +298,15 @@ def main():
     parser.add_argument("--vnc",
                         help="Turns on vnc at :1 to the instance.",
                         action="store_true")
+    parser.add_argument("--atomic",
+		    	help="Use this flag if you're booting an Atomic Host.",
+			action="store_true")
+    
     args = parser.parse_args()
 
     gfx = False
     vnc = False
+    atomic = False
 
     if args.no_graphic:
         gfx = True
@@ -282,7 +314,10 @@ def main():
     if args.vnc:
         vnc = True
 
-    build_and_run(args.url, args.ram, graphics=gfx, vnc=vnc)
+    if args.atomic:
+       atomic=True
+
+    build_and_run(args.url, args.ram, graphics=gfx, vnc=vnc, atomic=atomic)
 
 if __name__ == '__main__':
     main()
