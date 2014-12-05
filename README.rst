@@ -8,7 +8,13 @@ Currently only Fedora qcow2 images are tested and supported.
 Requirements
 ------------
 
-This script relies on the libvirt package - and boots images in Qemu.
+Packages:
+ - libvirt
+ - libguestfs
+ - libguestfs-tools
+
+All of these packages are in the Fedora repos (and likely other distros as
+well).
 
 Usage
 -----

@@ -75,7 +75,6 @@ def koji_download(urls):
 
         except OSError:
             print "Problem writing to {}.".format(config.LOCAL_DOWNLOAD_DIR)
-            print "Make sure to run this service with root permissions."
 
 def expand_qcow(image, size="+10G"):
     """Expand the storage for a qcow image. Currently only used for Atomic
