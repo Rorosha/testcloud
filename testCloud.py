@@ -218,14 +218,16 @@ def boot_image(
     return vm
 
 def build_and_run(
-	image_url, ram=1024, graphics=False, vnc=False, atomic=False):
+	image_url, ram=1024, graphics=False, vnc=False, atomic=False,
+        pristine=False):
     """Run through all the steps."""
 
     print "cleaning and creating dirs..."
     clean_dirs()
     create_dirs()
 
-    base_path = '/tmp/testCloud'
+    base_path = '/tmp/testCloud/'
+    pristine_path = '/tmp/pristine/'
 
     # Create cloud-init data
     print "Creating meta-data..."
@@ -244,8 +246,20 @@ def build_and_run(
 
 	if atomic:
 		expand_qcow(image)
+
+        # Copy a master file to the testCloud dir
+        print "Copying pristine image to %s..." % pristine_path
+        subprocess.call(['cp', image, pristine_path])
+
     else:
         print "using existing image..."
+        if pristine:
+            print "Copying from pristine image..."
+            os.remove(image_file)
+            subprocess.call(['cp',
+                             pristine_path + image_file.split('/')[-1],
+                             '/tmp/'])
+        
         image = image_file
 
     if not atomic:
@@ -272,6 +286,8 @@ def build_and_run(
 def create_dirs():
     """Create the dirs in /tmp that we need to store things."""
     os.makedirs('/tmp/testCloud/meta')
+    if not os.path.exists('/tmp/pristine'):
+        os.makedirs('/tmp/pristine')
     return "Created tmp directories."
 
 def clean_dirs():
@@ -279,6 +295,10 @@ def clean_dirs():
     if os.path.exists('/tmp/testCloud'):
         shutil.rmtree('/tmp/testCloud')
     return "All cleaned up!"
+
+def copy_master(downloaded_image):
+    """Copy a recently downloaded image to the testCloud dir"""
+
 
 def main():
     import argparse
@@ -300,12 +320,15 @@ def main():
     parser.add_argument("--atomic",
 		    	help="Use this flag if you're booting an Atomic Host.",
 			action="store_true")
-    
+    parser.add_argument("--pristine",
+                        help="Use a clean copy of an already downloaded image.",
+                        action="store_true")
     args = parser.parse_args()
 
     gfx = False
     vnc = False
     atomic = False
+    pristine = False
 
     if args.no_graphic:
         gfx = True
@@ -316,7 +339,15 @@ def main():
     if args.atomic:
        atomic=True
 
-    build_and_run(args.url, args.ram, graphics=gfx, vnc=vnc, atomic=atomic)
+    if args.pristine:
+        pristine=True
+
+    build_and_run(args.url,
+                  args.ram, 
+                  graphics=gfx, 
+                  vnc=vnc, 
+                  atomic=atomic,
+                  pristine=pristine)
 
 if __name__ == '__main__':
     main()
