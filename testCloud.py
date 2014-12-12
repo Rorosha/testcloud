@@ -235,21 +235,25 @@ def build_and_run(
 
     # Download image and get kernel/initrd
 
-    image_file = '/tmp/' + image_url.split('/')[-1]
-
-    if not os.path.isfile(image_file):
+    image_name = image_url.split('/')[-1]
+    image_file = '/tmp/' + image_name
+   
+    if not os.path.isfile(config.PRISTINE + image_name):
         print "downloading new image..."
         image = koji_download([image_url])[0]
+
+        # Copy a master file to the testCloud dir
+        print "Copying pristine image to %s..." % pristine_path
+        print config.PRISTINE + image_name
+        copy_master(config.PRISTINE + image_name)
 
 	if atomic:
 		expand_qcow(image)
 
-        # Copy a master file to the testCloud dir
-        print "Copying pristine image to %s..." % pristine_path
-        subprocess.call(['cp', image, pristine_path])
-
     else:
         print "using existing image..."
+        if not os.path.isfile(image_file):
+            copy_master(config.PRISTINE + image_name)
         if pristine:
             print "Copying from pristine image..."
             os.remove(image_file)
@@ -295,7 +299,12 @@ def clean_dirs():
 
 def copy_master(downloaded_image):
     """Copy a recently downloaded image to the testCloud dir"""
+    subprocess.call(['cp', downloaded_image, '/tmp/'])
+    print 'Copied pristine image to /tmp...'
 
+def list_pristine():
+    """List the pristine images currently saved."""
+    subprocess.call(config.PRISTINE)
 
 def main():
     import argparse

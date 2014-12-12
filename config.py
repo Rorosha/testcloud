@@ -1,6 +1,10 @@
 LOCAL_DOWNLOAD_DIR = "/tmp/"
 DOWNLOAD_PROGRESS = True
 
+# Directories testCloud cares about
+
+PRISTINE = "/tmp/pristine/"
+
 # Data for cloud-init
 
 META_DATA =  """instance-id: iid-123456
