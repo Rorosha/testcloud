@@ -189,20 +189,17 @@ def boot_image(
                  'file=%s,if=virtio' % qcow2,
                  '-drive',
                  'file=%s,if=virtio' % seed,
-                '-redir',
-                 'tcp:2222::22',
-                 '-redir',
-                 'tcp:8888::80',
     ]
+
+    # Extend with the customizations from the config file
+    boot_args.extend(config.CMD_LINE_ARGS)
 
     if not atomic:
 	boot_args.extend(['-kernel',
                  	'%s' % kernel,
                  	'-initrd',
                  	'%s' % initrd,
-                 	'-append',
-                 	'root=/dev/vda1 ro ds=nocloud-net'
-			])
+             		])
 
     if graphics:
         boot_args.extend(['-nographic'])
