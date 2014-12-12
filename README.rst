@@ -27,9 +27,12 @@ There are currently only three options (all optional) you can use when invoking
 this script: '--ram', '--no-graphic' and '--atomic'.
 
 The --ram option takes an int for how much ram you want the guest to have, 
-the --no-graphic option is merely a flag to suppress a GUI from appearing and
+the --no-graphic option is merely a flag to suppress a GUI from appearing,
 the --atomic option indicates that you wish to boot an 
-`Atomic <http://projectatomic.io>`_ host.
+`Atomic <http://projectatomic.io>`_ host as well as "--pristine", which allows you
+to reuse a previously downloaded image regardless of whether it's been
+configured before (reusing an image without "--pristine" still boots as 
+expectedi, retaining any configuration done to it previously).
 
 Once the image has booted, you can log in from the GUI or ssh. To log in with 
 ssh, run the following command:
