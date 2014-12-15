@@ -245,7 +245,7 @@ def build_and_run(
         # Copy a master file to the testCloud dir
         print "Copying pristine image to %s..." % pristine_path
         print config.PRISTINE + image_name
-        copy_master(config.PRISTINE + image_name)
+        copy_master(image_file)
 
 	if atomic:
 		expand_qcow(image)
@@ -299,7 +299,10 @@ def clean_dirs():
 
 def copy_master(downloaded_image):
     """Copy a recently downloaded image to the testCloud dir"""
-    subprocess.call(['cp', downloaded_image, '/tmp/'])
+    subprocess.call(['cp', 
+	             downloaded_image,
+		     config.PRISTINE])
+
     print 'Copied pristine image to /tmp...'
 
 def list_pristine():
