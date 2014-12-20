@@ -3,7 +3,7 @@ DOWNLOAD_PROGRESS = True
 
 # Directories testCloud cares about
 
-PRISTINE = "/tmp/pristine/"
+PRISTINE = "/home/roshi/Documents/isos/cloud/"
 
 # Data for cloud-init
 
@@ -31,5 +31,7 @@ CMD_LINE_ARGS = ['-redir',
                  '-redir',
                  'tcp:8888::80',
                  '-append', # These two lines are needed for cloud-init
-                 'root=/dev/vda1 ro ds=nocloud-net'
+		 'root=/dev/vda1 ro ds=nocloud-net',
+		 '-smp',
+		 '2'
 ]

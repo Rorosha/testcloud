@@ -224,7 +224,6 @@ def build_and_run(
     create_dirs()
 
     base_path = '/tmp/testCloud/'
-    pristine_path = '/tmp/pristine/'
 
     # Create cloud-init data
     print "Creating meta-data..."
@@ -243,7 +242,7 @@ def build_and_run(
         image = koji_download([image_url])[0]
 
         # Copy a master file to the testCloud dir
-        print "Copying pristine image to %s..." % pristine_path
+        print "Copying pristine image from {0}...".format(config.PRISTINE)
         print config.PRISTINE + image_name
         copy_master(image_file)
 
@@ -256,9 +255,13 @@ def build_and_run(
             copy_master(config.PRISTINE + image_name)
         if pristine:
             print "Copying from pristine image..."
-            os.remove(image_file)
-            subprocess.call(['cp',
-                             pristine_path + image_file.split('/')[-1],
+	    
+	    # Remove existing image if it exists
+	    if os.path.exists(image_file):
+            	os.remove(image_file)
+            
+	    subprocess.call(['cp',
+                             config.PRISTINE + image_file.split('/')[-1],
                              '/tmp/'])
         
         image = image_file
@@ -287,8 +290,9 @@ def build_and_run(
 def create_dirs():
     """Create the dirs in /tmp that we need to store things."""
     os.makedirs('/tmp/testCloud/meta')
-    if not os.path.exists('/tmp/pristine'):
-        os.makedirs('/tmp/pristine')
+    if not os.path.exists(config.PRISTINE):
+        os.makedirs(config.PRISTINE)
+	print "Created image store: {0}".format(config.PRISTINE)
     return "Created tmp directories."
 
 def clean_dirs():
@@ -303,11 +307,16 @@ def copy_master(downloaded_image):
 	             downloaded_image,
 		     config.PRISTINE])
 
-    print 'Copied pristine image to /tmp...'
+    print 'Copied pristine image to {0}...'.format(config.PRISTINE)
 
 def list_pristine():
     """List the pristine images currently saved."""
-    subprocess.call(config.PRISTINE)
+    images = glob.glob(config.PRISTINE + '/*')
+    for image in images:
+	print '\t- {0}'.format(image.split('/')[-1])
+    
+    #images = subprocess.call(['ls', 'config.PRISTINE'])
+    #print images.split('/')[-1]
 
 def main():
     import argparse
