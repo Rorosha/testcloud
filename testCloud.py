@@ -263,13 +263,13 @@ def build_and_run(
                         vnc=vnc,
                         atomic=atomic)
     else:
-            vm = boot_image(image,
-                            base_path + '/seed.img',
-                            external['initrd'],
-                            external['kernel'],
-                            ram=ram,
-                            graphics=graphics,
-                            vnc=vnc)
+        vm = boot_image(image,
+                        base_path + '/seed.img',
+                        external['initrd'],
+                        external['kernel'],
+                        ram=ram,
+                        graphics=graphics,
+                        vnc=vnc)
 
     return vm
 
