@@ -30,8 +30,6 @@ CMD_LINE_ARGS = ['-redir',
                  'tcp:2222::22',
                  '-redir',
                  'tcp:8888::80',
-                 '-append', # These two lines are needed for cloud-init
-		 'root=/dev/vda1 ro ds=nocloud-net',
 		 '-smp',
 		 '2'
 ]
