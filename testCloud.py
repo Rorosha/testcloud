@@ -9,228 +9,65 @@ This is the main script for running testCloud.
 """
 
 import os
-import glob
-import subprocess
-import sys
-import urllib2
-import time
-import itertools
-import shutil
 
 import config
+import util
+import libtestcloud as libtc
 
 
-def create_user_data(path, password, overwrite=False, atomic=False):
-    """Save the right  password to the 'user-data' file needed to
-    emulate cloud-init. Default username on cloud images is "fedora"
-
-    Will not overwrite an existing user-data file unless
-    the overwrite kwarg is set to True."""
-
-    if atomic:
-    file_data = config.ATOMIC_USER_DATA % password
-
-    else:
-        file_data = config.USER_DATA % password
-
-    if os.path.isfile(path + '/meta/user-data'):
-        if overwrite:
-
-            with open(path + '/meta/user-data', 'w') as user_file:
-                user_file.write(file_data)
-
-                return "user-data file generated."
-        else:
-            return "user-data file already exists"
-
-    with open(path + '/meta/user-data', 'w') as user_file:
-        user_file.write(file_data)
-
-    return "user-data file generated."
-
-def create_meta_data(path, hostname, overwrite=False):
-    """Save the required hostname data to the 'meta-data' file needed to
-    emulate cloud-init.
-
-    Will not overwrite an existing user-data file unless
-    the overwrite kwarg is set to True."""
-
-    file_data = config.META_DATA % hostname
-
-    if os.path.isfile(path + '/meta/meta-data'):
-        if overwrite:
-
-            with open(path + '/meta/meta-data', 'w') as meta_data_file:
-                meta_data_file.write(file_data)
-
-                return "meta-data file generated."
-        else:
-            return "meta-data file already exists"
-
-    with open(path + '/meta/meta-data', 'w') as meta_data_file:
-        meta_data_file.write(file_data)
-
-    return "meta-data file generated."
-
-
-def create_seed_img(meta_path, img_path):
-    """Create a virtual filesystem needed for boot with virt-make-fs on a given
-    path (it should probably be somewhere in '/tmp'."""
-
-    make_image = subprocess.call(['virt-make-fs', 
-                                  '--type=msdos',
-                                  '--label=cidata',
-                                  meta_path,
-                                  img_path + '/seed.img'])
-
-
-    if make_image == 0:
-        return "seed.img created at %s" % img_path
-
-    return "creation of the seed.img failed."
-
-
-def boot_image(
-    qcow2, seed, initrd=None, kernel=None, ram=1024, graphics=False,
-    vnc=False, atomic=False):
-    """Boot the cloud image redirecting local port 8888 to 80 on the vm as 
-    well as local port 2222 to 22 on the vm so http and ssh can be accessed."""
-
-    boot_args = ['/usr/bin/qemu-kvm',
-                 '-m', 
-                 str(ram), 
-                 '-drive', 
-                 'file=%s,if=virtio' % qcow2,
-                 '-drive',
-                 'file=%s,if=virtio' % seed,
-    ]
-
-    # Extend with the customizations from the config file
-    boot_args.extend(config.CMD_LINE_ARGS)
-
-    if not atomic:
-    boot_args.extend(['-kernel',
-                      '%s' % kernel,
-                      '-initrd',
-                      '%s' % initrd,
-                     ])
-
-    if graphics:
-        boot_args.extend(['-nographic'])
-
-    if vnc:
-        boot_args.extend(['-vnc', '0.0.0.0:1'])
-
-    vm = subprocess.Popen(boot_args)
-
-    print "Successfully booted your local cloud image!"
-    print "PID: %d" % vm.pid
-
-    return vm
-
-def build_and_run(
-    image_url, ram=1024, graphics=False, vnc=False, atomic=False,
+def run(
+    image_url, ram=512, graphics=False, vnc=False, atomic=False,
         pristine=False):
     """Run through all the steps."""
 
-    print "cleaning and creating dirs..."
-    clean_dirs()
-    create_dirs()
+    print "Cleaning dirs..."
+    util.clean_dirs()
+    util.create_dirs()
 
-    base_path = '/tmp/testCloud/'
+    base_path = '/tmp/testCloud'
 
-    # Create cloud-init data
+    # Create the data cloud-init needs
     print "Creating meta-data..."
-    create_user_data(base_path, "passw0rd", atomic=atomic)
-    create_meta_data(base_path, "testCloud")
+    util.create_user_data(base_path, "passw0rd", atomic=atomic)
+    util.create_meta_data(base_path, "testcloud")
 
-    create_seed_img(base_path + '/meta', base_path)
+    # Instantiate the image and the instance from the image
 
-    # Download image and get kernel/initrd
+    image = libtc.Image(image_url)
 
-    image_name = image_url.split('/')[-1]
-    image_file = '/tmp/' + image_name
+    vm = libtc.Instance(image)
 
-    if not os.path.isfile(config.PRISTINE + image_name):
+    # Set all the instance attributes passed from the cmdline
+    vm.ram = ram
+    vm.vnc = vnc
+    vm.graphics = graphics
+    vm.atomic = atomic
+
+    vm.create_seed_image(base_path + '/meta', base_path)
+
+    if not os.path.isfile(config.PRISTINE + vm.image):
         print "downloading new image..."
-        image = koji_download([image_url])[0]
+        image.download()
 
-        # Copy a master file to the testCloud dir
         print "Copying pristine image from {0}...".format(config.PRISTINE)
-        print config.PRISTINE + image_name
-        copy_master(image_file)
-
-    if atomic:
-        expand_qcow(image)
+        print config.PRISTINE + vm.image
+        image.save_pristine()
 
     else:
-        print "using existing image..."
-        if not os.path.isfile(image_file):
-            copy_master(config.PRISTINE + image_name)
+        print "Using existing image..."
+        if not os.path.isfile(image.path):
+            image.load_pristine()
         if pristine:
             print "Copying from pristine image..."
 
-        # Remove existing image if it exists
-        if os.path.exists(image_file):
-            os.remove(image_file)
+        # Remove existing image from /tmp if it exists
+        if os.path.exists(image.path):
+            os.remove(image.path)
 
-        subprocess.call(['cp',
-                             config.PRISTINE + image_file.split('/')[-1],
-                             '/tmp/'])
-
-        image = image_file
-
-    if not atomic:
-    external = download_initrd_and_kernel(image, base_path)
-
-    if atomic:
-    vm = boot_image(image,
-            base_path + '/seed.img',
-            ram=ram,
-            graphics=graphics,
-            vnc=vnc,
-            atomic=atomic)
-    else:
-        vm = boot_image(image,
-                        base_path + '/seed.img',
-                        external['initrd'],
-                        external['kernel'],
-                        ram=ram,
-                        graphics=graphics,
-                        vnc=vnc)
+        image.load_pristine()
 
     return vm
 
-def create_dirs():
-    """Create the dirs in /tmp that we need to store things."""
-    os.makedirs('/tmp/testCloud/meta')
-    if not os.path.exists(config.PRISTINE):
-        os.makedirs(config.PRISTINE)
-    print "Created image store: {0}".format(config.PRISTINE)
-    return "Created tmp directories."
-
-def clean_dirs():
-    """Remove dirs after a test run."""
-    if os.path.exists('/tmp/testCloud'):
-        shutil.rmtree('/tmp/testCloud')
-    return "All cleaned up!"
-
-def copy_master(downloaded_image):
-    """Copy a recently downloaded image to the testCloud dir"""
-    subprocess.call(['cp',
-                    downloaded_image,
-                    config.PRISTINE])
-
-    print 'Copied pristine image to {0}...'.format(config.PRISTINE)
-
-def list_pristine():
-    """List the pristine images currently saved."""
-    images = glob.glob(config.PRISTINE + '/*')
-    for image in images:
-    print '\t- {0}'.format(image.split('/')[-1])
-
-    #images = subprocess.call(['ls', 'config.PRISTINE'])
-    #print images.split('/')[-1]
 
 def main():
     import argparse
@@ -253,7 +90,7 @@ def main():
                         help="Use this flag if you're booting an Atomic Host.",
                         action="store_true")
     parser.add_argument("--pristine",
-                        help="Use a clean copy of an already downloaded image.",
+                        help="Use a clean copy of an image.",
                         action="store_true")
     args = parser.parse_args()
 
@@ -269,19 +106,17 @@ def main():
         vnc = True
 
     if args.atomic:
-       atomic=True
+        atomic = True
 
     if args.pristine:
-        pristine=True
+        pristine = True
 
-    build_and_run(args.url,
-                  args.ram,
-                  graphics=gfx,
-                  vnc=vnc,
-                  atomic=atomic,
-                  pristine=pristine)
+    run(args.url,
+        args.ram,
+        graphics=gfx,
+        vnc=vnc,
+        atomic=atomic,
+        pristine=pristine)
 
 if __name__ == '__main__':
     main()
-
-
