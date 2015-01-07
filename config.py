@@ -1,4 +1,4 @@
-LOCAL_DOWNLOAD_DIR = "/tmp/"
+LOCAL_DOWNLOAD_DIR = "/var/tmp/"
 DOWNLOAD_PROGRESS = True
 
 # Directories testCloud cares about
@@ -7,14 +7,14 @@ PRISTINE = "/home/roshi/Documents/isos/cloud/"
 
 # Data for cloud-init
 
-META_DATA =  """instance-id: iid-123456
+META_DATA = """instance-id: iid-123456
 local-hostname: %s
 """
 USER_DATA = """#cloud-config
 password: %s
 chpasswd: { expire: False }
 ssh_pwauth: True
-""" 
+"""
 ATOMIC_USER_DATA = """#cloud-config
 password: %s
 chpasswd: { expire: False }
@@ -30,6 +30,6 @@ CMD_LINE_ARGS = ['-redir',
                  'tcp:2222::22',
                  '-redir',
                  'tcp:8888::80',
-		 '-smp',
-		 '2'
-]
+                 '-smp',
+                 '2'
+                 ]

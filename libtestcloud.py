@@ -81,8 +81,6 @@ class Image(object):
                         status = status + chr(8) * (len(status) + 1)
                         sys.stdout.write(status)
 
-            self.path = config.LOCAL_DOWNLOAD_DIR
-
         except OSError:
             print "Problem writing to {}.".format(config.LOCAL_DOWNLOAD_DIR)
 
@@ -90,20 +88,21 @@ class Image(object):
         """Save a copy of the downloaded image to the configured PRISTINE dir.
         Only call this after an image has been downloaded.
         """
+
         subprocess.call(['cp',
                         self.path,
                         config.PRISTINE])
 
-        print 'Copied pristine image to {0}...'.format(config.PRISTINE)
+        print 'Copied fresh image to {0}...'.format(config.PRISTINE)
 
     def load_pristine(self):
         """Load a pristine image to /tmp instead of downloading.
         """
         subprocess.call(['cp',
                          config.PRISTINE + self.name,
-                         '/tmp/'])
+                         config.LOCAL_DOWNLOAD_DIR])
 
-        print 'Copied pristine image to /tmp ...'
+        print 'Copied fresh image to {} ...'.format(config.LOCAL_DOWNLOAD_DIR)
 
 
 class Instance(object):
@@ -154,21 +153,20 @@ class Instance(object):
         """Set the seed image for the instance."""
         self.seed = path
 
-    def download_initrd_and_kernel(self, path='/tmp/'):
+    def download_initrd_and_kernel(self, path=config.LOCAL_DOWNLOAD_DIR):
         """Download the necessary kernel and initrd for booting a specified
-        cloud image. Returns a dict {'kernel': '', 'initrd': ''} after the
-        download is completed."""
+        cloud image."""
 
         subprocess.call(['virt-builder', '--get-kernel',
                          self.image_path],
                         cwd=path)
 
-        try:
-            self.kernel = glob.glob("%s/*vmlinuz*" % path)[0]
-            self.initrd = glob.glob("%s/*initramfs*" % path)[0]
+        self.kernel = glob.glob("%s/*vmlinuz*" % path)[0]
+        self.initrd = glob.glob("%s/*initramfs*" % path)[0]
 
-        except IndexError:
-            print "Unable to find kernel or initrd, did they download?"
+        if self.kernel is None or self.initrd is None:
+            raise IndexError("Unable to find kernel or initrd, did they " +
+                             "download?")
             sys.exit(1)
 
     def boot(self):

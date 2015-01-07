@@ -48,9 +48,6 @@ def run(
     if not os.path.isfile(config.PRISTINE + vm.image):
         print "downloading new image..."
         image.download()
-
-        print "Copying pristine image from {0}...".format(config.PRISTINE)
-        print config.PRISTINE + vm.image
         image.save_pristine()
 
     else:
@@ -65,6 +62,10 @@ def run(
             os.remove(image.path)
 
         image.load_pristine()
+
+    vm.download_initrd_and_kernel()
+
+    vm.boot()
 
     return vm
 
