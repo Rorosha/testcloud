@@ -1,9 +1,9 @@
-LOCAL_DOWNLOAD_DIR = "/var/tmp/"
 DOWNLOAD_PROGRESS = True
 
 # Directories testCloud cares about
 
-PRISTINE = "/home/roshi/Documents/isos/cloud/"
+PRISTINE = "/var/lib/testcloud/images"
+LOCAL_DOWNLOAD_DIR = "/var/tmp/"
 
 # Data for cloud-init
 

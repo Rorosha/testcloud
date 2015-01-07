@@ -24,7 +24,7 @@ def run(
     util.clean_dirs()
     util.create_dirs()
 
-    base_path = '/tmp/testCloud'
+    base_path = config.LOCAL_DOWNLOAD_DIR + '/testCloud'
 
     # Create the data cloud-init needs
     print "Creating meta-data..."
@@ -62,8 +62,6 @@ def run(
             os.remove(image.path)
 
         image.load_pristine()
-
-    vm.download_initrd_and_kernel()
 
     vm.boot()
 

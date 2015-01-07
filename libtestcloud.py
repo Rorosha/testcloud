@@ -191,6 +191,8 @@ class Instance(object):
             self.expand_qcow()
 
         if not self.atomic:
+            self.download_initrd_and_kernel()
+
             boot_args.extend(['-kernel',
                               '%s' % self.kernel,
                               '-initrd',
