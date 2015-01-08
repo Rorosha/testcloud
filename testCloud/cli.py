@@ -63,7 +63,15 @@ def run(
 
             image.load_pristine()
 
-    vm.boot()
+    # Determine if we want to grow the disk. Currently we only do this if the
+    # instance to be booted is a fresh Atomic image.
+
+    expand_disk = False
+
+    if atomic and pristine:
+        expand_disk = True
+
+    vm.boot(expand_disk=expand_disk)
 
     return vm
 

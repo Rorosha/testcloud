@@ -169,10 +169,14 @@ class Instance(object):
                              "download?")
             sys.exit(1)
 
-    def boot(self):
+    def boot(self, expand_disk=False):
         """Boot the cloud image redirecting local port 8888 to 80 on the vm as
         well as local port 2222 to 22 on the vm so http and ssh can be
         accessed.
+
+        Pass True to expand_disk if booting a fresh atomic image or you want to
+        grow the disk size for some other reason at boot.
+
         """
 
         boot_args = ['/usr/bin/qemu-kvm',
@@ -187,7 +191,7 @@ class Instance(object):
         # Extend with the customizations from the config file
         boot_args.extend(config.CMD_LINE_ARGS)
 
-        if self.atomic:
+        if expand_disk:
             self.expand_qcow()
 
         if not self.atomic:
