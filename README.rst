@@ -19,9 +19,15 @@ well).
 Usage
 -----
 
+The usage varies slightly between using the git checkout and installing the
+module. To run testCloud straight from the git checkout, use
 .. code:: bash
 
-    python testCloud.py <url for qcow2 image>
+    python run_testCloud.py <url for qcow2 image>
+
+After installing via pip or setup.py, you can run
+.. code:: bash
+    testCloud <url for qcow2 image>
 
 There are currently only three options (all optional) you can use when invoking
 this script: '--ram', '--no-graphic' and '--atomic'.
