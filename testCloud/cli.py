@@ -14,6 +14,7 @@ import config
 import util
 import libtestcloud as libtc
 
+config_data = config.get_config()
 
 def run(
     image_url, ram=512, graphics=False, vnc=False, atomic=False,
@@ -24,12 +25,12 @@ def run(
     util.clean_dirs()
     util.create_dirs()
 
-    base_path = config.LOCAL_DOWNLOAD_DIR + '/testCloud'
+    base_path = config_data.LOCAL_DOWNLOAD_DIR + '/testCloud'
 
     # Create the data cloud-init needs
     print "Creating meta-data..."
-    util.create_user_data(base_path, "passw0rd", atomic=atomic)
-    util.create_meta_data(base_path, "testcloud")
+    util.create_user_data(base_path, config_data.PASSWORD, atomic=atomic)
+    util.create_meta_data(base_path, config_data.HOSTNAME)
 
     # Instantiate the image and the instance from the image
 
@@ -45,7 +46,7 @@ def run(
 
     vm.create_seed_image(base_path + '/meta', base_path)
 
-    if not os.path.isfile(config.PRISTINE + vm.image):
+    if not os.path.isfile(config_data.PRISTINE + vm.image):
         print "downloading new image..."
         image.download()
         image.save_pristine()

@@ -17,6 +17,8 @@ import config
 import urllib2
 
 
+config_data = config.get_config()
+
 class Image(object):
     """The Image class handles the download, storage and retrieval of
     cloud images."""
@@ -24,7 +26,7 @@ class Image(object):
     def __init__(self, url):
         self.url = url
         self.name = url.split('/')[-1]
-        self.path = config.LOCAL_DOWNLOAD_DIR + self.name
+        self.path = config_data.LOCAL_DOWNLOAD_DIR + self.name
 
     def download(self):
         """ Downloads files (qcow2s, specifically) from a list of URLs with an
@@ -35,11 +37,11 @@ class Image(object):
         # with a sign saying "FREE." Thanks oddshocks!
 
         # Create the proper local upload directory if it doesn't exist.
-        if not os.path.exists(config.LOCAL_DOWNLOAD_DIR):
-            os.makedirs(config.LOCAL_DOWNLOAD_DIR)
+        if not os.path.exists(config_data.LOCAL_DOWNLOAD_DIR):
+            os.makedirs(config_data.LOCAL_DOWNLOAD_DIR)
 
         print "Local downloads will be stored in {}.".format(
-            config.LOCAL_DOWNLOAD_DIR)
+            config_data.LOCAL_DOWNLOAD_DIR)
 
         # When qcow2s are downloaded and converted, they are added here
         raw_files = list()
@@ -49,7 +51,7 @@ class Image(object):
 
         for url in list(urls):
             file_name = url.split('/')[-1]
-        local_file_name = config.LOCAL_DOWNLOAD_DIR + file_name
+        local_file_name = config_data.LOCAL_DOWNLOAD_DIR + file_name
         u = urllib2.urlopen(url)
 
         try:
@@ -73,7 +75,7 @@ class Image(object):
                     bytes_downloaded += len(buff)
                     f.write(buff)
                     bytes_remaining = float(bytes_downloaded) / file_size
-                    if config.DOWNLOAD_PROGRESS:
+                    if config_data.DOWNLOAD_PROGRESS:
                         # TODO: Improve this progress indicator by making
                         # it more readable and user-friendly.
                         status = r"{0} [{1:.2%}]".format(bytes_downloaded,
@@ -82,27 +84,27 @@ class Image(object):
                         sys.stdout.write(status)
 
         except OSError:
-            print "Problem writing to {}.".format(config.LOCAL_DOWNLOAD_DIR)
+            print "Problem writing to {}.".format(config_data.LOCAL_DOWNLOAD_DIR)
 
     def save_pristine(self):
-        """Save a copy of the downloaded image to the configured PRISTINE dir.
+        """Save a copy of the downloaded image to the config_dataured PRISTINE dir.
         Only call this after an image has been downloaded.
         """
 
         subprocess.call(['cp',
                         self.path,
-                        config.PRISTINE])
+                        config_data.PRISTINE])
 
-        print 'Copied fresh image to {0}...'.format(config.PRISTINE)
+        print 'Copied fresh image to {0}...'.format(config_data.PRISTINE)
 
     def load_pristine(self):
         """Load a pristine image to /tmp instead of downloading.
         """
         subprocess.call(['cp',
-                         config.PRISTINE + self.name,
-                         config.LOCAL_DOWNLOAD_DIR])
+                         config_data.PRISTINE + self.name,
+                         config_data.LOCAL_DOWNLOAD_DIR])
 
-        print 'Copied fresh image to {} ...'.format(config.LOCAL_DOWNLOAD_DIR)
+        print 'Copied fresh image to {} ...'.format(config_data.LOCAL_DOWNLOAD_DIR)
 
 
 class Instance(object):
@@ -153,7 +155,7 @@ class Instance(object):
         """Set the seed image for the instance."""
         self.seed = path
 
-    def download_initrd_and_kernel(self, path=config.LOCAL_DOWNLOAD_DIR):
+    def download_initrd_and_kernel(self, path=config_data.LOCAL_DOWNLOAD_DIR):
         """Download the necessary kernel and initrd for booting a specified
         cloud image."""
 
@@ -184,8 +186,8 @@ class Instance(object):
                      'file=%s,if=virtio' % self.seed,
                      ]
 
-        # Extend with the customizations from the config file
-        boot_args.extend(config.CMD_LINE_ARGS)
+        # Extend with the customizations from the config_data file
+        boot_args.extend(config_data.CMD_LINE_ARGS)
 
         if self.atomic:
             self.expand_qcow()

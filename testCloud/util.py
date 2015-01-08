@@ -15,6 +15,8 @@ import glob
 import config
 
 
+config_data = config.get_config()
+
 def create_user_data(path, password, overwrite=False, atomic=False):
     """Save the right  password to the 'user-data' file needed to
     emulate cloud-init. Default username on cloud images is "fedora"
@@ -23,10 +25,10 @@ def create_user_data(path, password, overwrite=False, atomic=False):
     the overwrite kwarg is set to True."""
 
     if atomic:
-        file_data = config.ATOMIC_USER_DATA % password
+        file_data = config_data.ATOMIC_USER_DATA % password
 
     else:
-        file_data = config.USER_DATA % password
+        file_data = config_data.USER_DATA % password
 
     if os.path.isfile(path + '/meta/user-data'):
         if overwrite:
@@ -51,7 +53,7 @@ def create_meta_data(path, hostname, overwrite=False):
     Will not overwrite an existing user-data file unless
     the overwrite kwarg is set to True."""
 
-    file_data = config.META_DATA % hostname
+    file_data = config_data.META_DATA % hostname
 
     if os.path.isfile(path + '/meta/meta-data'):
         if overwrite:
@@ -71,22 +73,22 @@ def create_meta_data(path, hostname, overwrite=False):
 
 def create_dirs():
     """Create the dirs in the download dir we need to store things."""
-    os.makedirs(config.LOCAL_DOWNLOAD_DIR + 'testCloud/meta')
-    if not os.path.exists(config.PRISTINE):
-        os.makedirs(config.PRISTINE)
-        print "Created image store: {0}".format(config.PRISTINE)
+    os.makedirs(config_data.LOCAL_DOWNLOAD_DIR + 'testCloud/meta')
+    if not os.path.exists(config_data.PRISTINE):
+        os.makedirs(config_data.PRISTINE)
+        print "Created image store: {0}".format(config_data.PRISTINE)
     return "Created tmp directories."
 
 
 def clean_dirs():
     """Remove dirs after a test run."""
-    if os.path.exists(config.LOCAL_DOWNLOAD_DIR + 'testCloud'):
-        shutil.rmtree(config.LOCAL_DOWNLOAD_DIR + 'testCloud')
+    if os.path.exists(config_data.LOCAL_DOWNLOAD_DIR + 'testCloud'):
+        shutil.rmtree(config_data.LOCAL_DOWNLOAD_DIR + 'testCloud')
     return "All cleaned up!"
 
 
 def list_pristine():
     """List the pristine images currently saved."""
-    images = glob.glob(config.PRISTINE + '/*')
+    images = glob.glob(config_data.PRISTINE + '/*')
     for image in images:
         print '\t- {0}'.format(image.split('/')[-1])
