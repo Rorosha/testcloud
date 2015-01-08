@@ -5,7 +5,7 @@ DOWNLOAD_PROGRESS = True
 
 # Directories testCloud cares about
 
-PRISTINE = "/home/{}/.cache/testcloud/images".format(os.getlogin())
+PRISTINE = "/home/{}/.cache/testcloud/images/".format(os.getlogin())
 LOCAL_DOWNLOAD_DIR = "/var/tmp/"
 
 # Data for cloud-init
