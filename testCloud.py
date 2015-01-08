@@ -57,11 +57,11 @@ def run(
         if pristine:
             print "Copying from pristine image..."
 
-        # Remove existing image from /tmp if it exists
-        if os.path.exists(image.path):
-            os.remove(image.path)
+            # Remove existing image if it exists
+            if os.path.exists(image.path):
+                os.remove(image.path)
 
-        image.load_pristine()
+            image.load_pristine()
 
     vm.boot()
 
