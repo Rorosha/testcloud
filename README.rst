@@ -29,6 +29,7 @@ module. To run testCloud straight from the git checkout, use
 After installing via pip or setup.py, you can run
 
 .. code:: bash
+
     testCloud <url for qcow2 image>
 
 There are currently only three options (all optional) you can use when invoking
