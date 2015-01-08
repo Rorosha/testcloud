@@ -19,15 +19,23 @@ well).
 Usage
 -----
 
+The usage varies slightly between using the git checkout and installing the
+module. To run testCloud straight from the git checkout, use
+
 .. code:: bash
 
-    python testCloud.py <url for qcow2 image>
+    python run_testCloud.py <url for qcow2 image>
+
+After installing via pip or setup.py, you can run
+
+.. code:: bash
+
+    testCloud <url for qcow2 image>
 
 There are currently only three options (all optional) you can use when invoking
 this script: '--ram', '--no-graphic' and '--atomic'.
 
-The --ram option takes an int for how much ram you want the guest to have, 
-the --no-graphic option is merely a flag to suppress a GUI from appearing,
+The --ram option takes an int for how much ram you want the guest to have, the --no-graphic option is merely a flag to suppress a GUI from appearing,
 the --atomic option indicates that you wish to boot an 
 `Atomic <http://projectatomic.io>`_ host as well as "--pristine", which allows you
 to reuse a previously downloaded image regardless of whether it's been
@@ -61,4 +69,4 @@ Thanks to `Oddshocks <https://github.com/oddshocks>`_ for the koji downloader co
 License
 -------
 
-This code is licensed GPLv2. See the LICENSE file for details.
+This code is licensed GPLv2+. See the LICENSE file for details.
