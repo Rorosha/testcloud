@@ -12,9 +12,10 @@ Packages:
  - libvirt
  - libguestfs
  - libguestfs-tools
+ - python-requests (for whatever python version you're running)
 
-For Python3:
- - python-requests
+Optional:
+ - py.test (if you plan on running or working on the tests)
 
 All of these packages are in the Fedora repos (and likely other distros as
 well).
