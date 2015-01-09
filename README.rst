@@ -35,11 +35,12 @@ After installing via pip or setup.py, you can run
 There are currently only three options (all optional) you can use when invoking
 this script: '--ram', '--no-graphic' and '--atomic'.
 
-The --ram option takes an int for how much ram you want the guest to have, the --no-graphic option is merely a flag to suppress a GUI from appearing,
-the --atomic option indicates that you wish to boot an 
-`Atomic <http://projectatomic.io>`_ host as well as "--pristine", which allows you
+The --ram option takes an int for how much ram you want the guest to have, the
+``--no-graphic option`` is merely a flag to suppress a GUI from appearing, the
+``--atomic`` option indicates that you wish to boot an
+`Atomic <http://projectatomic.io>`_ host as well as ``--pristine``, which allows you
 to reuse a previously downloaded image regardless of whether it's been
-configured before (reusing an image without "--pristine" still boots as 
+configured before (reusing an image without ``--pristine`` still boots as 
 expectedi, retaining any configuration done to it previously).
 
 Once the image has booted, you can log in from the GUI or ssh. To log in with 
@@ -52,6 +53,22 @@ ssh, run the following command:
 The user is 'fedora' and the password is 'passw0rd'
 
 Now you have a working local cloud image to test against.
+
+Configuration
+-------------
+
+The default configuration should work for many people but those defaults can
+be overridden through the use of a ``settings.py`` file containing the values to
+use when overriding default settings. The example file in
+``conf/settings-example.py`` shows the possible configuration values which can
+be changed.
+
+Note that in order for those new values to be picked up, the filename must be
+``settings.py`` and that file must live in one of the following locations:
+
+- ``conf/settings.py`` in the git checkout
+- ``~/.config/testCloud/settings.py``
+- ``/etc/testCloud/settings.py``
 
 Testing
 -------
