@@ -14,7 +14,6 @@ import os
 import subprocess
 import glob
 from . import config
-import urllib.request, urllib.error, urllib.parse
 
 import requests
 
