@@ -13,9 +13,10 @@ import sys
 import os
 import subprocess
 import glob
-import config
-import urllib2
+from . import config
+import urllib.request, urllib.error, urllib.parse
 
+import requests
 
 config_data = config.get_config()
 
@@ -32,59 +33,47 @@ class Image(object):
         """ Downloads files (qcow2s, specifically) from a list of URLs with an
         optional progress bar. Returns a list of raw image files. """
 
-        # This code was blatantly stolen from fedimg - but it was depreciated,
-        # that's the internet version of sitting in front of someone's house
-        # with a sign saying "FREE." Thanks oddshocks!
-
         # Create the proper local upload directory if it doesn't exist.
         if not os.path.exists(config_data.LOCAL_DOWNLOAD_DIR):
             os.makedirs(config_data.LOCAL_DOWNLOAD_DIR)
 
-        print "Local downloads will be stored in {}.".format(
-            config_data.LOCAL_DOWNLOAD_DIR)
+        print("Local downloads will be stored in {}.".format(
+            config_data.LOCAL_DOWNLOAD_DIR))
 
-        # When qcow2s are downloaded and converted, they are added here
-        raw_files = list()
-
-        urls = []
-        urls.append(self.url)
-
-        for url in list(urls):
-            file_name = url.split('/')[-1]
-        local_file_name = config_data.LOCAL_DOWNLOAD_DIR + file_name
-        u = urllib2.urlopen(url)
+        u = requests.get(self.url, stream=True)
 
         try:
-            with open(local_file_name, 'wb') as f:
-                meta = u.info()
-                file_size = int(meta.getheaders("Content-Length")[0])
+            with open(self.path, 'wb') as f:
+                file_size = int(u.headers['Content-Length'])
 
-                print "Downloading {0} ({1} bytes)".format(url, file_size)
+                print("Downloading {0} ({1} bytes)".format(self.name, file_size))
                 bytes_downloaded = 0
-                block_size = 8192
+                block_size = 4096
 
                 while True:
-                    buff = u.read(block_size)  # buffer
-                    if not buff:
 
-                        raw_files.append(local_file_name)
+                    try:
 
-                        print "Succeeded at downloading {0}".format(file_name)
+                        for data in u.iter_content(block_size):
+
+                            bytes_downloaded += len(data)
+                            f.write(data)
+                            bytes_remaining = float(bytes_downloaded) / file_size
+                            if config_data.DOWNLOAD_PROGRESS:
+                                # TODO: Improve this progress indicator by making
+                                # it more readable and user-friendly.
+                                status = r"{0}/{1} [{2:.2%}]".format(bytes_downloaded,
+                                                                     file_size,
+                                                                     bytes_remaining)
+                                status = status + chr(8) * (len(status) + 1)
+                                sys.stdout.write(status)
+
+                    except TypeError:
+                        print("Succeeded at downloading {0}".format(self.name))
                         break
 
-                    bytes_downloaded += len(buff)
-                    f.write(buff)
-                    bytes_remaining = float(bytes_downloaded) / file_size
-                    if config_data.DOWNLOAD_PROGRESS:
-                        # TODO: Improve this progress indicator by making
-                        # it more readable and user-friendly.
-                        status = r"{0} [{1:.2%}]".format(bytes_downloaded,
-                                                         bytes_remaining)
-                        status = status + chr(8) * (len(status) + 1)
-                        sys.stdout.write(status)
-
         except OSError:
-            print "Problem writing to {}.".format(config_data.LOCAL_DOWNLOAD_DIR)
+            print("Problem writing to {}.".format(config_data.LOCAL_DOWNLOAD_DIR))
 
     def save_pristine(self):
         """Save a copy of the downloaded image to the config_dataured PRISTINE dir.
@@ -95,7 +84,7 @@ class Image(object):
                         self.path,
                         config_data.PRISTINE])
 
-        print 'Copied fresh image to {0}...'.format(config_data.PRISTINE)
+        print('Copied fresh image to {0}...'.format(config_data.PRISTINE))
 
     def load_pristine(self):
         """Load a pristine image to /tmp instead of downloading.
@@ -104,7 +93,7 @@ class Image(object):
                          config_data.PRISTINE + self.name,
                          config_data.LOCAL_DOWNLOAD_DIR])
 
-        print 'Copied fresh image to {} ...'.format(config_data.LOCAL_DOWNLOAD_DIR)
+        print('Copied fresh image to {} ...'.format(config_data.LOCAL_DOWNLOAD_DIR))
 
 
 class Instance(object):
@@ -131,7 +120,7 @@ class Instance(object):
                          self.image_path,
                          size])
 
-        print "Resized image for Atomic testing..."
+        print("Resized image for Atomic testing...")
         return
 
     def create_seed_image(self, meta_path, img_path):
@@ -215,7 +204,7 @@ class Instance(object):
 
         vm = subprocess.Popen(boot_args)
 
-        print "Successfully booted your local cloud image!"
-        print "PID: %d" % vm.pid
+        print("Successfully booted your local cloud image!")
+        print("PID: %d" % vm.pid)
 
         return vm

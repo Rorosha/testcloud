@@ -13,6 +13,9 @@ Packages:
  - libguestfs
  - libguestfs-tools
 
+For Python3:
+ - python-requests
+
 All of these packages are in the Fedora repos (and likely other distros as
 well).
 

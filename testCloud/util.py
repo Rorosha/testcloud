@@ -12,7 +12,7 @@ import os
 import shutil
 import glob
 
-import config
+from . import config
 
 
 config_data = config.get_config()
@@ -76,7 +76,7 @@ def create_dirs():
     os.makedirs(config_data.LOCAL_DOWNLOAD_DIR + 'testCloud/meta')
     if not os.path.exists(config_data.PRISTINE):
         os.makedirs(config_data.PRISTINE)
-        print "Created image store: {0}".format(config_data.PRISTINE)
+        print("Created image store: {0}".format(config_data.PRISTINE))
     return "Created tmp directories."
 
 
@@ -91,4 +91,4 @@ def list_pristine():
     """List the pristine images currently saved."""
     images = glob.glob(config_data.PRISTINE + '/*')
     for image in images:
-        print '\t- {0}'.format(image.split('/')[-1])
+        print('\t- {0}'.format(image.split('/')[-1]))

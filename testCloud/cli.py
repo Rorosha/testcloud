@@ -10,9 +10,9 @@ This is the main script for running testCloud.
 
 import os
 
-import config
-import util
-import libtestcloud as libtc
+from . import config
+from . import util
+from . import libtestcloud as libtc
 
 config_data = config.get_config()
 
@@ -21,14 +21,14 @@ def run(
         pristine=False):
     """Run through all the steps."""
 
-    print "Cleaning dirs..."
+    print("Cleaning dirs...")
     util.clean_dirs()
     util.create_dirs()
 
     base_path = config_data.LOCAL_DOWNLOAD_DIR + '/testCloud'
 
     # Create the data cloud-init needs
-    print "Creating meta-data..."
+    print("Creating meta-data...")
     util.create_user_data(base_path, config_data.PASSWORD, atomic=atomic)
     util.create_meta_data(base_path, config_data.HOSTNAME)
 
@@ -47,16 +47,16 @@ def run(
     vm.create_seed_image(base_path + '/meta', base_path)
 
     if not os.path.isfile(config_data.PRISTINE + vm.image):
-        print "downloading new image..."
+        print("downloading new image...")
         image.download()
         image.save_pristine()
 
     else:
-        print "Using existing image..."
+        print("Using existing image...")
         if not os.path.isfile(image.path):
             image.load_pristine()
         if pristine:
-            print "Copying from pristine image..."
+            print("Copying from pristine image...")
 
             # Remove existing image if it exists
             if os.path.exists(image.path):
