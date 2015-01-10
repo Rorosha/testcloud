@@ -8,17 +8,17 @@
 
 class TestImage:
 
-    def test_image_download_path():
+    def test_image_download_path(self):
         pass
 
-    def test_image_name():
+    def test_image_name(self):
         pass
 
-    def test_download():
+    def test_download(self):
         pass
 
-    def test_save_pristine():
+    def test_save_pristine(self):
         pass
 
-    def test_load_pristine():
+    def test_load_pristine(self):
         pass
