@@ -49,18 +49,18 @@ def run(
     if not os.path.isfile(config_data.PRISTINE + vm.image):
         print("downloading new image...")
         image.download()
-        image.save_pristine()
+        image.load_pristine()
 
     else:
         print("Using existing image...")
-        if not os.path.isfile(image.path):
+        if not os.path.isfile(config_data.LOCAL_DOWNLOAD_DIR + image.name):
             image.load_pristine()
         if pristine:
             print("Copying from pristine image...")
 
             # Remove existing image if it exists
-            if os.path.exists(image.path):
-                os.remove(image.path)
+            if os.path.exists(config_data.LOCAL_DOWNLOAD_DIR + image.name):
+                os.remove(config_data.LOCAL_DOWNLOAD_DIR + image.name)
 
             image.load_pristine()
 

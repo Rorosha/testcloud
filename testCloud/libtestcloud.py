@@ -26,18 +26,18 @@ class Image(object):
     def __init__(self, url):
         self.url = url
         self.name = url.split('/')[-1]
-        self.path = config_data.LOCAL_DOWNLOAD_DIR + self.name
+        self.path = config_data.PRISTINE + self.name
 
     def download(self):
         """ Downloads files (qcow2s, specifically) from a list of URLs with an
         optional progress bar. Returns a list of raw image files. """
 
         # Create the proper local upload directory if it doesn't exist.
-        if not os.path.exists(config_data.LOCAL_DOWNLOAD_DIR):
-            os.makedirs(config_data.LOCAL_DOWNLOAD_DIR)
+        if not os.path.exists(config_data.PRISTINE):
+            os.makedirs(config_data.PRISTINE)
 
         print("Local downloads will be stored in {}.".format(
-            config_data.LOCAL_DOWNLOAD_DIR))
+            config_data.PRISTINE))
 
         u = requests.get(self.url, stream=True)
 
@@ -72,7 +72,7 @@ class Image(object):
                         break
 
         except OSError:
-            print("Problem writing to {}.".format(config_data.LOCAL_DOWNLOAD_DIR))
+            print("Problem writing to {}.".format(config_data.PRISTINE))
 
     def save_pristine(self):
         """Save a copy of the downloaded image to the config_dataured PRISTINE dir.
