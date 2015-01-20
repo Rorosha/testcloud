@@ -10,6 +10,7 @@ This is the main script for running testCloud.
 
 import os
 from time import sleep
+import libvirt
 
 from . import config
 from . import util
@@ -17,7 +18,7 @@ from . import libtestcloud as libtc
 
 config_data = config.get_config()
 
-def run(
+def install(
     image_url, instance_name, ram=512, graphics=False, vnc=False, atomic=False,
         pristine=False):
     """Run through all the steps."""
@@ -103,40 +104,48 @@ def main():
     parser.add_argument("--pristine",
                         help="Use a clean copy of an image.",
                         action="store_true")
+    parser.add_argument("--name",
+                        help="A unique name to use for your instance.",
+                        default='testCloud')
     args = parser.parse_args()
 
-    gfx = False
-    vnc = False
-    atomic = False
-    pristine = False
+    install(args.url,
+            args.name,
+            args.ram,
+            graphics=args.no_graphic,
+            vnc=args.vnc,
+            atomic=args.atomic,
+            pristine=args.pristine)
 
-    if args.no_graphic:
-        gfx = True
+    #  It takes a bit for the instance to get registered in virsh,
+    #  so here we keep asking for the domain we created until virsh
+    #  finally decides to cough up the information.
 
-    if args.vnc:
-        vnc = True
+    for _ in xrange(70):
+        try:
+            vm_xml = util.get_vm_xml(args.name)
+            break
 
-    if args.atomic:
-        atomic = True
+        except libvirt.libvirtError as e:
+            if "Domain not found" not in str(e):
+                raise
+            sleep(.5)
+    else:
+        raise
 
-    if args.pristine:
-        pristine = True
-
-    run(args.url,
-        "test_tc",
-        args.ram,
-        graphics=gfx,
-        vnc=vnc,
-        atomic=atomic,
-        pristine=pristine)
-
-    #  This sleep is required to let virsh finish spawning the instance
-    sleep(10)
-
-    vm_xml = util.get_vm_xml('test_tc')
     vm_mac = util.find_mac(vm_xml)
     vm_mac = vm_mac[0]
-    vm_ip = util.find_ip_from_mac(vm_mac.attrib['address'])
+
+    #  The arp cache takes some time to populate, so this keeps looking
+    #  for the entry until it shows up.
+
+    for _ in xrange(60):
+        vm_ip = util.find_ip_from_mac(vm_mac.attrib['address'])
+        if vm_ip is None:
+            sleep(.2)
+            pass
+        else:
+            break
 
     print("The IP of your VM is: {}".format(vm_ip))
 
