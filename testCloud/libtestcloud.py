@@ -99,9 +99,12 @@ class Instance(object):
     """The Instance class handles the creation, location and customization
     of existing testCloud instances (which are qcow2 backed from an Image)"""
 
-    def __init__(self, image):
+    def __init__(self, name, image):
+        self.name = name
         self.image = image.name
-        self.image_path = image.path
+        self.backing_store = image.path
+        self.image_path = config_data.LOCAL_DOWNLOAD_DIR + self.name + \
+                ".qcow2"
         self.ram = 512
         self.vnc = False
         self.graphics = False
@@ -109,6 +112,23 @@ class Instance(object):
         self.seed = None
         self.kernel = None
         self.initrd = None
+
+    def create_instance(self):
+        """Create a instance using the backing store provided by Image."""
+
+        subprocess.call(['qemu-img',
+                         'create',
+                         '-f',
+                         'qcow2',
+                         '-b',
+                         self.backing_store,
+                         self.image_path
+                         ])
+
+    def exists(self):
+        """Check to see if this instance already exists."""
+
+        pass
 
     def expand_qcow(self, size="+10G"):
         """Expand the storage for a qcow image. Currently only used for Atomic
@@ -159,7 +179,7 @@ class Instance(object):
                              "download?")
             sys.exit(1)
 
-    def boot(self, expand_disk=False):
+    def spawn(self, expand_disk=False):
         """Boot the cloud image redirecting local port 8888 to 80 on the vm as
         well as local port 2222 to 22 on the vm so http and ssh can be
         accessed.
@@ -169,13 +189,17 @@ class Instance(object):
 
         """
 
-        boot_args = ['/usr/bin/qemu-kvm',
-                     '-m',
+        boot_args = ['/usr/bin/virt-install',
+                     '-n',
+                     self.name,
+                     '-r',
                      str(self.ram),
-                     '-drive',
-                     'file=%s,if=virtio' % self.image_path,
-                     '-drive',
-                     'file=%s,if=virtio' % self.seed,
+                     '--os-type=linux',  # This should be configurable later
+                     '--disk',
+                     '{},device=disk,bus=virtio,format=qcow2'.format(
+                         self.image_path),
+                     '--disk',
+                     '{},device=disk,bus=virtio'.format(self.seed),
                      ]
 
         # Extend with the customizations from the config_data file
@@ -187,12 +211,13 @@ class Instance(object):
         if not self.atomic:
             self.download_initrd_and_kernel()
 
-            boot_args.extend(['-kernel',
-                              '%s' % self.kernel,
-                              '-initrd',
-                              '%s' % self.initrd,
-                              '-append',  # cloud-init needs these two lines
-                              'root=/dev/vda1 ro ds=nocloud-net',
+            boot_args.extend(['--boot',
+                              'kernel={0},initrd={1},kernel_args={2}'.format(
+                                  self.kernel,
+                                  self.initrd,
+                                  '"root=/dev/vda1 ro ds=nocloud-net"'),
+                              '--import',
+                              '--noautoconsole'
                               ])
 
         if self.graphics:
@@ -207,3 +232,11 @@ class Instance(object):
         print("PID: %d" % vm.pid)
 
         return vm
+
+    def boot(self):
+        """Boot an already spawned instance."""
+
+        subprocess.Popen(['virsh',
+                          'start',
+                          self.name
+                          ])

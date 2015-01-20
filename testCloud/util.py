@@ -11,6 +11,10 @@ This module contains helper functions for the housekeeping tasks of testCloud.
 import os
 import shutil
 import glob
+import subprocess
+import libvirt
+
+import xml.etree.ElementTree as ET
 
 from . import config
 
@@ -92,3 +96,37 @@ def list_pristine():
     images = glob.glob(config_data.PRISTINE + '/*')
     for image in images:
         print('\t- {0}'.format(image.split('/')[-1]))
+
+def get_vm_xml(instance_name):
+    """Query virsh for the xml of an instance by name."""
+
+    con = libvirt.openReadOnly('qemu:///system')
+    domains = con.listAllDomains()
+
+    result = None
+
+    for dom in domains:
+        if dom.name() == instance_name:
+            result = dom.XMLDesc()
+
+    return str(result)
+
+def find_mac(xml_string):
+    """Pass in a virsh xmldump and return a list of any mac addresses listed.
+    Typically it will just be one.
+    """
+
+    xml_data = ET.fromstring(xml_string)
+
+    macs = xml_data.findall("./devices/interface/mac")
+
+    return macs
+
+def find_ip_from_mac(mac):
+    """Look through ``arp -an`` output for the IP of the provided MAC address.
+    """
+
+    arp_list = subprocess.check_output(["arp", "-an"]).split("\n")
+    for entry in arp_list:
+        if mac in entry:
+            return entry.split()[1][1:-1]

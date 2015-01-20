@@ -9,6 +9,7 @@ This is the main script for running testCloud.
 """
 
 import os
+from time import sleep
 
 from . import config
 from . import util
@@ -17,7 +18,7 @@ from . import libtestcloud as libtc
 config_data = config.get_config()
 
 def run(
-    image_url, ram=512, graphics=False, vnc=False, atomic=False,
+    image_url, instance_name, ram=512, graphics=False, vnc=False, atomic=False,
         pristine=False):
     """Run through all the steps."""
 
@@ -36,7 +37,7 @@ def run(
 
     image = libtc.Image(image_url)
 
-    vm = libtc.Instance(image)
+    vm = libtc.Instance(instance_name, image)
 
     # Set all the instance attributes passed from the cmdline
     vm.ram = ram
@@ -72,7 +73,9 @@ def run(
     if atomic and pristine:
         expand_disk = True
 
-    vm.boot(expand_disk=expand_disk)
+    vm.create_instance()
+    vm.spawn(expand_disk=expand_disk)
+
 
     return vm
 
@@ -120,11 +123,23 @@ def main():
         pristine = True
 
     run(args.url,
+        "test_tc",
         args.ram,
         graphics=gfx,
         vnc=vnc,
         atomic=atomic,
         pristine=pristine)
+
+    #  This sleep is required to let virsh finish spawning the instance
+    sleep(10)
+
+    vm_xml = util.get_vm_xml('test_tc')
+    vm_mac = util.find_mac(vm_xml)
+    vm_mac = vm_mac[0]
+    vm_ip = util.find_ip_from_mac(vm_mac.attrib['address'])
+
+    print("The IP of your VM is: {}".format(vm_ip))
+
 
 if __name__ == '__main__':
     main()
