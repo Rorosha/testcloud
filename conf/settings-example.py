@@ -12,7 +12,7 @@ import os
 
 # Directories testCloud cares about
 
-#PRISTINE = "/home/{}/.cache/testcloud/images/".format(os.getlogin())
+#PRISTINE = "/home/{}/.local/testcloud/images/".format(os.getlogin())
 #LOCAL_DOWNLOAD_DIR = "/var/tmp/"
 
 # Data for cloud-init
@@ -39,10 +39,4 @@ import os
 # Extra cmdline args for the qemu invocation.
 # Customize as needed :)
 
-#CMD_LINE_ARGS = ['-redir',
-#                 'tcp:2222::22',
-#                 '-redir',
-#                 'tcp:8888::80',
-#                 '-smp',
-#                 '2'
-#                 ]
+#CMD_LINE_ARGS = []

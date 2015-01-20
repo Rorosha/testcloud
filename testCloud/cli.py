@@ -121,14 +121,13 @@ def main():
     #  so here we keep asking for the domain we created until virsh
     #  finally decides to cough up the information.
 
-    for _ in xrange(70):
+    for _ in xrange(100):
         try:
             vm_xml = util.get_vm_xml(args.name)
             break
 
         except libvirt.libvirtError as e:
             if "Domain not found" not in str(e):
-                raise
             sleep(.5)
     else:
         raise
@@ -139,13 +138,11 @@ def main():
     #  The arp cache takes some time to populate, so this keeps looking
     #  for the entry until it shows up.
 
-    for _ in xrange(60):
+    for _ in xrange(100):
         vm_ip = util.find_ip_from_mac(vm_mac.attrib['address'])
-        if vm_ip is None:
-            sleep(.2)
-            pass
-        else:
-            break
+
+        if vm_ip: break
+        sleep(.2)
 
     print("The IP of your VM is: {}".format(vm_ip))
 
