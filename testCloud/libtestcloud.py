@@ -42,8 +42,8 @@ class Image(object):
         u = requests.get(self.url, stream=True)
 
         try:
-            with open(self.path, 'wb') as f:
-                file_size = int(u.headers['Content-Length'])
+            with open(self.path + ".part", 'wb') as f:
+                file_size = int(u.headers['content-length'])
 
                 print("Downloading {0} ({1} bytes)".format(self.name, file_size))
                 bytes_downloaded = 0
@@ -68,6 +68,8 @@ class Image(object):
                                 sys.stdout.write(status)
 
                     except TypeError:
+                        #  Rename the file since download has completed
+                        os.rename(self.path + ".part", self.path)
                         print("Succeeded at downloading {0}".format(self.name))
                         break
 

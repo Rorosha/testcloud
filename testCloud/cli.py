@@ -51,7 +51,7 @@ def install(
     if not os.path.isfile(config_data.PRISTINE + vm.image):
         print("downloading new image...")
         image.download()
-        image.load_pristine()
+        #image.load_pristine()
 
     else:
         print("Using existing image...")
@@ -127,10 +127,10 @@ def main():
             break
 
         except libvirt.libvirtError as e:
-            if "Domain not found" not in str(e):
-            sleep(.5)
+            if "Domain not found" in str(e):
+                sleep(.2)
     else:
-        raise
+        print("Looking for the new virsh domain...")
 
     vm_mac = util.find_mac(vm_xml)
     vm_mac = vm_mac[0]

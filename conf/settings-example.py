@@ -12,7 +12,7 @@ import os
 
 # Directories testCloud cares about
 
-#PRISTINE = "/home/{}/.local/testcloud/images/".format(os.getlogin())
+#PRISTINE = "/home/{}/.local/share/testcloud/images/".format(os.getlogin())
 #LOCAL_DOWNLOAD_DIR = "/var/tmp/"
 
 # Data for cloud-init

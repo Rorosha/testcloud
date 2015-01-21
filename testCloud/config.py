@@ -84,7 +84,7 @@ class ConfigData(object):
 
     # Directories testCloud cares about
 
-    PRISTINE = "/home/{}/.local/testcloud/images/".format(os.getlogin())
+    PRISTINE = "/home/{}/.local/share/testcloud/images/".format(os.getlogin())
     LOCAL_DOWNLOAD_DIR = "/var/tmp/"
 
     # Data for cloud-init
@@ -111,7 +111,7 @@ runcmd:
     # Extra cmdline args for the qemu invocation.
     # Customize as needed :)
 
-    CMD_LINE_ARGS = []                     ]
+    CMD_LINE_ARGS = []
 
     def merge_object(self, obj):
         '''Overwrites default values with values from a python object which have
