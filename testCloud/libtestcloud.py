@@ -152,11 +152,11 @@ class Instance(object):
                                       '--type=msdos',
                                       '--label=cidata',
                                       meta_path,
-                                      img_path + '/seed.img'])
+                                      img_path + '/{}-seed.img'.format(self.name)])
 
         # Check the subprocess.call return value for success
         if make_image == 0:
-            self.set_seed(img_path + '/seed.img')
+            self.set_seed(img_path + '/{}-seed.img'.format(self.name))
             return "seed.img created at %s" % img_path
 
         return "creation of the seed.img failed."
@@ -192,16 +192,17 @@ class Instance(object):
         """
 
         boot_args = ['/usr/bin/virt-install',
+                     '--import',
                      '-n',
                      self.name,
                      '-r',
                      str(self.ram),
                      '--os-type=linux',  # This should be configurable later
                      '--disk',
-                     '{},device=disk,bus=virtio,format=qcow2'.format(
+                     '{},device=disk,bus=ide,format=qcow2'.format(
                          self.image_path),
                      '--disk',
-                     '{},device=disk,bus=virtio'.format(self.seed),
+                     '{},device=disk,bus=ide'.format(self.seed),
                      ]
 
         # Extend with the customizations from the config_data file
@@ -218,15 +219,15 @@ class Instance(object):
                                   self.kernel,
                                   self.initrd,
                                   '"root=/dev/vda1 ro ds=nocloud-net"'),
-                              '--import',
-                              '--noautoconsole'
                               ])
 
         if self.graphics:
-            boot_args.extend(['-nographic'])
+            boot_args.extend(['--noautoconsole'])
 
         if self.vnc:
             boot_args.extend(['-vnc', '0.0.0.0:1'])
+
+        print boot_args
 
         vm = subprocess.Popen(boot_args)
 
@@ -242,3 +243,21 @@ class Instance(object):
                           'start',
                           self.name
                           ])
+
+    def selfdestruct(self):
+        """Remove an instance from virsh."""
+
+        for cmd in ['destroy', 'undefine']:
+            subprocess.Popen(['virsh',
+                              cmd,
+                              self.name
+                              ])
+
+class DomainNotFoundError(BaseException):
+    """Exception to raise if the queried domain can't be found."""
+
+    def __init__(self):
+        self.value = "Could not find the requested virsh domain, did it register?"
+
+    def __str__(self):
+        return repr(self.value)

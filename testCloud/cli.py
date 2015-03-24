@@ -48,13 +48,16 @@ def install(
 
     vm.create_seed_image(base_path + '/meta', base_path)
 
+    boot = False
+
     if not os.path.isfile(config_data.PRISTINE + vm.image):
         print("downloading new image...")
         image.download()
-        #image.load_pristine()
 
     else:
         print("Using existing image...")
+
+
         if not os.path.isfile(config_data.LOCAL_DOWNLOAD_DIR + image.name):
             image.load_pristine()
         if pristine:
@@ -66,6 +69,10 @@ def install(
 
             image.load_pristine()
 
+        # Note that we just need to boot, not install
+        else:
+            boot = True
+
     # Determine if we want to grow the disk. Currently we only do this if the
     # instance to be booted is a fresh Atomic image.
 
@@ -74,9 +81,17 @@ def install(
     if atomic and pristine:
         expand_disk = True
 
-    vm.create_instance()
-    vm.spawn(expand_disk=expand_disk)
+    if pristine:
+        vm.selfdestruct()
+        vm.create_instance()
+        vm.spawn(expand_disk=expand_disk)
 
+    else:
+        if boot:
+            vm.boot()
+        else:
+            vm.create_instance()
+            vm.spawn(expand_disk=expand_disk)
 
     return vm
 
@@ -121,16 +136,18 @@ def main():
     #  so here we keep asking for the domain we created until virsh
     #  finally decides to cough up the information.
 
+    print("Don't worry about these 'QEMU Driver' errors. libvirt is whiny " + \
+          "and has no method to shut it up...\n")
+
     for _ in xrange(100):
-        try:
-            vm_xml = util.get_vm_xml(args.name)
+        vm_xml = util.get_vm_xml(args.name)
+        if vm_xml is not None:
             break
 
-        except libvirt.libvirtError as e:
-            if "Domain not found" in str(e):
-                sleep(.2)
+        else:
+            sleep(.2)
     else:
-        print("Looking for the new virsh domain...")
+        raise libtc.DomainNotFoundError
 
     vm_mac = util.find_mac(vm_xml)
     vm_mac = vm_mac[0]

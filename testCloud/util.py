@@ -101,7 +101,11 @@ def get_vm_xml(instance_name):
     """Query virsh for the xml of an instance by name."""
 
     con = libvirt.openReadOnly('qemu:///system')
-    domain = con.lookupByName(instance_name)
+    try:
+        domain = con.lookupByName(instance_name)
+
+    except libvirt.libvirtError as e:
+       return None
 
     result = domain.XMLDesc()
 
