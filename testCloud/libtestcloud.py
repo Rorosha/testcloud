@@ -13,8 +13,9 @@ import sys
 import os
 import subprocess
 import glob
+from time import sleep
 from . import config
-
+import pwd
 import requests
 
 config_data = config.get_config()
@@ -127,6 +128,13 @@ class Instance(object):
                          self.image_path
                          ])
 
+        # Ensure correct permissions on the instance qcow2.
+        print("Ensuring the instance qcow2 has correct permissions...")
+
+        qemu = pwd.getpwnam('qemu')
+
+        os.chown(self.image_path, qemu.pw_uid, qemu.pw_gid)
+
     def exists(self):
         """Check to see if this instance already exists."""
 
@@ -199,10 +207,10 @@ class Instance(object):
                      str(self.ram),
                      '--os-type=linux',  # This should be configurable later
                      '--disk',
-                     '{},device=disk,bus=ide,format=qcow2'.format(
+                     '{},device=disk,bus=virtio,format=qcow2'.format(
                          self.image_path),
                      '--disk',
-                     '{},device=disk,bus=ide'.format(self.seed),
+                     '{},device=disk,bus=virtio'.format(self.seed),
                      ]
 
         # Extend with the customizations from the config_data file
@@ -226,8 +234,6 @@ class Instance(object):
 
         if self.vnc:
             boot_args.extend(['-vnc', '0.0.0.0:1'])
-
-        print boot_args
 
         vm = subprocess.Popen(boot_args)
 
