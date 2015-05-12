@@ -51,8 +51,8 @@ def install(
     boot = False
 
     if not os.path.isfile(config_data.PRISTINE + vm.image):
-        print("downloading new image...")
-        image.download()
+        print("image is not cached, preparing new image...")
+        image.prepare()
 
     else:
         print("Using existing image...")
