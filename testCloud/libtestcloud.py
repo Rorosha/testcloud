@@ -13,40 +13,92 @@ import sys
 import os
 import subprocess
 import glob
-from time import sleep
 from . import config
 import pwd
+import re
+import shutil
+import logging
+
 import requests
+
+from testCloud.exceptions import TestCloudImageError
 
 config_data = config.get_config()
 
+log = logging.getLogger('libtestcloud')
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+
+
 class Image(object):
-    """The Image class handles the download, storage and retrieval of
-    cloud images."""
+    """Handles base cloud images and prepares them for boot. This includes
+    downloading images from remote systems (http, https supported) or copying
+    from mounted local filesystems.
+    """
 
-    def __init__(self, url):
-        self.url = url
-        self.name = url.split('/')[-1]
-        self.path = config_data.PRISTINE + self.name
+    def __init__(self, uri):
+        """Create a new Image object for TestCloud
 
-    def download(self):
-        """ Downloads files (qcow2s, specifically) from a list of URLs with an
-        optional progress bar. Returns a list of raw image files. """
+        :param uri: URI for the image to be represented. this URI must be of a
+            supported type (http, https, file)
+        :raises TaskotronImageError: if the URI is not of a supported type or cannot be parsed
+        """
 
-        # Create the proper local upload directory if it doesn't exist.
-        if not os.path.exists(config_data.PRISTINE):
-            os.makedirs(config_data.PRISTINE)
+        self.uri = uri
 
-        print("Local downloads will be stored in {}.".format(
-            config_data.PRISTINE))
+        uri_data = self._process_uri(uri)
 
-        u = requests.get(self.url, stream=True)
+        self.name = uri_data['name']
+        self.uri_type = uri_data['type']
+
+        if self.uri_type == 'file':
+            self.remote_path = uri_data['path']
+        else:
+            self.remote_path = uri
+
+        self.local_path = config_data.PRISTINE + self.name
+
+    def _process_uri(self, uri):
+        """Process the URI given to find the type, path and imagename contained
+        in that URI.
+
+        :param uri: string URI to be processed
+        :return: dictionary containing 'type', 'name' and 'path'
+        :raise TestCloudImageError: if the URI is invalid or uses an unsupported transport
+        """
+
+        type_match = re.search(r'(http|https|file)://([\w\.\-/]+)', uri)
+
+        if not type_match:
+            raise TestCloudImageError('invalid uri: only http, https and file uris are supported: {}'.format(uri))
+
+        uri_type = type_match.group(1)
+        uri_path = type_match.group(2)
+
+        name_match = re.findall('([\w\.\-]+)', uri)
+
+        if not name_match:
+            raise TestCloudImageError('invalid uri: could not find image name: {}'.format(uri))
+
+        image_name = name_match[-1]
+        return {'type': uri_type, 'name': image_name, 'path': uri_path}
+
+
+    def _download_remote_image(self, remote_url, local_path):
+        """Download a remote image to the local system, outputting download
+        progress as it's downloaded.
+
+        :param remote_url: URL of the image
+        :param local_path: local path (including filename) that the image
+            will be downloaded to
+        """
+
+        u = requests.get(remote_url, stream=True)
 
         try:
-            with open(self.path + ".part", 'wb') as f:
+            with open(local_path + ".part", 'wb') as f:
                 file_size = int(u.headers['content-length'])
 
-                print("Downloading {0} ({1} bytes)".format(self.name, file_size))
+                log.info("Downloading {0} ({1} bytes)".format(self.name, file_size))
                 bytes_downloaded = 0
                 block_size = 4096
 
@@ -70,12 +122,36 @@ class Image(object):
 
                     except TypeError:
                         #  Rename the file since download has completed
-                        os.rename(self.path + ".part", self.path)
-                        print("Succeeded at downloading {0}".format(self.name))
+                        os.rename(local_path + ".part", local_path)
+                        log.info("Succeeded at downloading {0}".format(self.name))
                         break
 
         except OSError:
-            print("Problem writing to {}.".format(config_data.PRISTINE))
+            log.error("Problem writing to {}.".format(config_data.PRISTINE))
+
+    def _handle_file_url(self, source_path, dest_path):
+        if not os.path.exists(dest_path):
+            shutil.copy(source_path, dest_path)
+
+
+    def prepare(self):
+        """Prepare the image for local use by either downloading the image from
+        a remote location or copying it into the image cache from a locally
+        mounted filesystem"""
+
+        # Create the proper local upload directory if it doesn't exist.
+        if not os.path.exists(config_data.PRISTINE):
+            os.makedirs(config_data.PRISTINE)
+
+        log.debug("Local downloads will be stored in {}.".format(
+            config_data.PRISTINE))
+
+        if self.uri_type == 'file':
+            self._handle_file_url(self.remote_path, self.local_path)
+        else:
+            self._download_remote_image(self.remote_path, self.local_path)
+
+        return self.local_path
 
     def save_pristine(self):
         """Save a copy of the downloaded image to the config_dataured PRISTINE dir.
@@ -83,10 +159,10 @@ class Image(object):
         """
 
         subprocess.call(['cp',
-                        self.path,
+                        self.local_path,
                         config_data.PRISTINE])
 
-        print('Copied fresh image to {0}...'.format(config_data.PRISTINE))
+        log.debug('Copied fresh image to {0}...'.format(config_data.PRISTINE))
 
     def load_pristine(self):
         """Load a pristine image to /tmp instead of downloading.
@@ -95,7 +171,7 @@ class Image(object):
                          config_data.PRISTINE + self.name,
                          config_data.LOCAL_DOWNLOAD_DIR])
 
-        print('Copied fresh image to {} ...'.format(config_data.LOCAL_DOWNLOAD_DIR))
+        log.debug('Copied fresh image to {} ...'.format(config_data.LOCAL_DOWNLOAD_DIR))
 
 
 class Instance(object):
@@ -105,7 +181,7 @@ class Instance(object):
     def __init__(self, name, image):
         self.name = name
         self.image = image.name
-        self.backing_store = image.path
+        self.backing_store = image.local_path
         self.image_path = config_data.LOCAL_DOWNLOAD_DIR + self.name + \
                 ".qcow2"
         self.ram = 512
@@ -129,7 +205,7 @@ class Instance(object):
                          ])
 
         # Ensure correct permissions on the instance qcow2.
-        print("Ensuring the instance qcow2 has correct permissions...")
+        log.info("Ensuring the instance qcow2 has correct permissions...")
 
         qemu = pwd.getpwnam('qemu')
 
@@ -149,7 +225,7 @@ class Instance(object):
                          self.image_path,
                          size])
 
-        print("Resized image for Atomic testing...")
+        log.info("Resized image for Atomic testing...")
         return
 
     def create_seed_image(self, meta_path, img_path):
@@ -237,8 +313,8 @@ class Instance(object):
 
         vm = subprocess.Popen(boot_args)
 
-        print("Successfully booted your local cloud image!")
-        print("PID: %d" % vm.pid)
+        log.info("Successfully booted your local cloud image!")
+        log.info("PID: %d" % vm.pid)
 
         return vm
 
