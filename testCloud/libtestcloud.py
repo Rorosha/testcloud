@@ -17,12 +17,17 @@ from . import config
 import pwd
 import re
 import shutil
+import logging
 
 import requests
 
 from testCloud.exceptions import TestCloudImageError
 
 config_data = config.get_config()
+
+log = logging.getLogger('libtestcloud')
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+
 
 class Image(object):
     """Handles base cloud images and prepares them for boot. This includes
@@ -93,7 +98,7 @@ class Image(object):
             with open(local_path + ".part", 'wb') as f:
                 file_size = int(u.headers['content-length'])
 
-                print("Downloading {0} ({1} bytes)".format(self.name, file_size))
+                log.info("Downloading {0} ({1} bytes)".format(self.name, file_size))
                 bytes_downloaded = 0
                 block_size = 4096
 
@@ -118,11 +123,11 @@ class Image(object):
                     except TypeError:
                         #  Rename the file since download has completed
                         os.rename(local_path + ".part", local_path)
-                        print("Succeeded at downloading {0}".format(self.name))
+                        log.info("Succeeded at downloading {0}".format(self.name))
                         break
 
         except OSError:
-            print("Problem writing to {}.".format(config_data.PRISTINE))
+            log.error("Problem writing to {}.".format(config_data.PRISTINE))
 
     def _handle_file_url(self, source_path, dest_path):
         if not os.path.exists(dest_path):
@@ -138,7 +143,7 @@ class Image(object):
         if not os.path.exists(config_data.PRISTINE):
             os.makedirs(config_data.PRISTINE)
 
-        print("Local downloads will be stored in {}.".format(
+        log.debug("Local downloads will be stored in {}.".format(
             config_data.PRISTINE))
 
         if self.uri_type == 'file':
@@ -157,7 +162,7 @@ class Image(object):
                         self.local_path,
                         config_data.PRISTINE])
 
-        print('Copied fresh image to {0}...'.format(config_data.PRISTINE))
+        log.debug('Copied fresh image to {0}...'.format(config_data.PRISTINE))
 
     def load_pristine(self):
         """Load a pristine image to /tmp instead of downloading.
@@ -166,7 +171,7 @@ class Image(object):
                          config_data.PRISTINE + self.name,
                          config_data.LOCAL_DOWNLOAD_DIR])
 
-        print('Copied fresh image to {} ...'.format(config_data.LOCAL_DOWNLOAD_DIR))
+        log.debug('Copied fresh image to {} ...'.format(config_data.LOCAL_DOWNLOAD_DIR))
 
 
 class Instance(object):
@@ -200,7 +205,7 @@ class Instance(object):
                          ])
 
         # Ensure correct permissions on the instance qcow2.
-        print("Ensuring the instance qcow2 has correct permissions...")
+        log.info("Ensuring the instance qcow2 has correct permissions...")
 
         qemu = pwd.getpwnam('qemu')
 
@@ -220,7 +225,7 @@ class Instance(object):
                          self.image_path,
                          size])
 
-        print("Resized image for Atomic testing...")
+        log.info("Resized image for Atomic testing...")
         return
 
     def create_seed_image(self, meta_path, img_path):
@@ -308,8 +313,8 @@ class Instance(object):
 
         vm = subprocess.Popen(boot_args)
 
-        print("Successfully booted your local cloud image!")
-        print("PID: %d" % vm.pid)
+        log.info("Successfully booted your local cloud image!")
+        log.info("PID: %d" % vm.pid)
 
         return vm
 

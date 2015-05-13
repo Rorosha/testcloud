@@ -17,6 +17,7 @@ import libvirt
 import xml.etree.ElementTree as ET
 
 from . import config
+from .libtestcloud import log
 
 
 config_data = config.get_config()
@@ -80,7 +81,7 @@ def create_dirs():
     os.makedirs(config_data.LOCAL_DOWNLOAD_DIR + 'testCloud/meta')
     if not os.path.exists(config_data.PRISTINE):
         os.makedirs(config_data.PRISTINE)
-        print("Created image store: {0}".format(config_data.PRISTINE))
+        log.debug("Created image store: {0}".format(config_data.PRISTINE))
     return "Created tmp directories."
 
 

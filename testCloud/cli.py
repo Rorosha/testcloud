@@ -18,19 +18,21 @@ from . import libtestcloud as libtc
 
 config_data = config.get_config()
 
+from .libtestcloud import log
+
 def install(
     image_url, instance_name, ram=512, graphics=False, vnc=False, atomic=False,
         pristine=False):
     """Run through all the steps."""
 
-    print("Cleaning dirs...")
+    log.info("Cleaning dirs...")
     util.clean_dirs()
     util.create_dirs()
 
     base_path = config_data.LOCAL_DOWNLOAD_DIR + '/testCloud'
 
     # Create the data cloud-init needs
-    print("Creating meta-data...")
+    log.info("Creating meta-data...")
     util.create_user_data(base_path, config_data.PASSWORD, atomic=atomic)
     util.create_meta_data(base_path, config_data.HOSTNAME)
 
@@ -51,17 +53,17 @@ def install(
     boot = False
 
     if not os.path.isfile(config_data.PRISTINE + vm.image):
-        print("image is not cached, preparing new image...")
+        log.info("image is not cached, preparing new image...")
         image.prepare()
 
     else:
-        print("Using existing image...")
+        log.info("Using existing image...")
 
 
         if not os.path.isfile(config_data.LOCAL_DOWNLOAD_DIR + image.name):
             image.load_pristine()
         if pristine:
-            print("Copying from pristine image...")
+            log.debug("Copying from pristine image...")
 
             # Remove existing image if it exists
             if os.path.exists(config_data.LOCAL_DOWNLOAD_DIR + image.name):
@@ -136,7 +138,7 @@ def main():
     #  so here we keep asking for the domain we created until virsh
     #  finally decides to cough up the information.
 
-    print("Don't worry about these 'QEMU Driver' errors. libvirt is whiny " + \
+    log.info("Don't worry about these 'QEMU Driver' errors. libvirt is whiny " + \
           "and has no method to shut it up...\n")
 
     for _ in xrange(100):
