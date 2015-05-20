@@ -134,6 +134,32 @@ class Image(object):
             shutil.copy(source_path, dest_path)
 
 
+    def _adjust_image_selinux(self, image_path):
+        """If SElinux is enabled on the system, change the context of that image
+        file such that libguestfs and qemu can use it.
+
+        :param image_path: path to the image to change the context of
+        """
+
+        selinux_active = subprocess.call(['selinuxenabled'])
+
+        if selinux_active != 0:
+            log.debug('SELinux not enabled, not changing context of'
+                      'image {}'.format(image_path))
+            return
+
+        image_context = subprocess.call(['chcon',
+                                         '-u', 'system_u',
+                                         '-t', 'virt_content_t',
+                                         image_path])
+        if image_context == 0:
+            log.debug('successfully changed SELinux context for '
+                      'image {}'.format(image_path))
+        else:
+            log.error('Error while changing SELinux context on '
+                      'image {}'.format(image_path))
+
+
     def prepare(self):
         """Prepare the image for local use by either downloading the image from
         a remote location or copying it into the image cache from a locally
@@ -150,6 +176,8 @@ class Image(object):
             self._handle_file_url(self.remote_path, self.local_path)
         else:
             self._download_remote_image(self.remote_path, self.local_path)
+
+        self._adjust_image_selinux(self.local_path)
 
         return self.local_path
 
@@ -210,6 +238,7 @@ class Instance(object):
         qemu = pwd.getpwnam('qemu')
 
         os.chown(self.image_path, qemu.pw_uid, qemu.pw_gid)
+
 
     def exists(self):
         """Check to see if this instance already exists."""
