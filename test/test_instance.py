@@ -6,6 +6,12 @@
 
 """ This module is for testing the behaviour of the Image class."""
 
+import os
+
+import mock
+
+from testCloud import instance, config
+
 class TestInstance:
 
     def test_expand_qcow(self):
@@ -28,3 +34,35 @@ class TestInstance:
 
     def test_boot_pristine(self):
         pass
+
+class TestFindInstance(object):
+
+    def setup_method(self, method):
+        self.conf = config.ConfigData()
+
+    def test_non_existant_instance(self, monkeypatch):
+        ref_name = 'test-123'
+        ref_image = 'someimage.qcow2'
+
+        stub_listdir = mock.Mock()
+        stub_listdir.return_value = []
+        monkeypatch.setattr(os, 'listdir', stub_listdir)
+
+        test_instance = instance.find(ref_name, ref_image)
+
+        assert test_instance is None
+
+
+    def test_find_exist_instance(self, monkeypatch):
+        ref_name = 'test-123'
+        ref_image = 'someimage.qcow2'
+        ref_path = os.path.join(self.conf.DATA_DIR,
+                                'instances/{}'.format(ref_name))
+
+        stub_listdir = mock.Mock()
+        stub_listdir.return_value = [ref_name]
+        monkeypatch.setattr(os, 'listdir', stub_listdir)
+
+        test_instance = instance.find(ref_name, ref_image)
+
+        assert test_instance == ref_path

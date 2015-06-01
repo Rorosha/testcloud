@@ -5,102 +5,29 @@
 # See the LICENSE file for more details on Licensing
 
 """
-This is the main script for running testCloud.
+This is the primary user entry point for testCloud
 """
 
-import os
-from time import sleep
-import libvirt
+import argparse
+import logging
 
 from . import config
+from . import image
+from . import instance
+
+# these are used in commented out code, may be reactivated
+#import os
+from time import sleep
 from . import util
-from . import libtestcloud as libtc
+#import libvirt
+from .exceptions import DomainNotFoundError
 
 config_data = config.get_config()
 
-from .libtestcloud import log
+log = logging.getLogger('libtestcloud')
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
-def install(
-    image_url, instance_name, ram=512, graphics=False, vnc=False, atomic=False,
-        pristine=False):
-    """Run through all the steps."""
-
-    log.info("Cleaning dirs...")
-    util.clean_dirs()
-    util.create_dirs()
-
-    base_path = config_data.LOCAL_DOWNLOAD_DIR + '/testCloud'
-
-    # Create the data cloud-init needs
-    log.info("Creating meta-data...")
-    util.create_user_data(base_path, config_data.PASSWORD, atomic=atomic)
-    util.create_meta_data(base_path, config_data.HOSTNAME)
-
-    # Instantiate the image and the instance from the image
-
-    image = libtc.Image(image_url)
-
-    vm = libtc.Instance(instance_name, image)
-
-    # Set all the instance attributes passed from the cmdline
-    vm.ram = ram
-    vm.vnc = vnc
-    vm.graphics = graphics
-    vm.atomic = atomic
-
-    vm.create_seed_image(base_path + '/meta', base_path)
-
-    boot = False
-
-    if not os.path.isfile(config_data.PRISTINE + vm.image):
-        log.info("image is not cached, preparing new image...")
-        image.prepare()
-
-    else:
-        log.info("Using existing image...")
-
-
-        if not os.path.isfile(config_data.LOCAL_DOWNLOAD_DIR + image.name):
-            image.load_pristine()
-        if pristine:
-            log.debug("Copying from pristine image...")
-
-            # Remove existing image if it exists
-            if os.path.exists(config_data.LOCAL_DOWNLOAD_DIR + image.name):
-                os.remove(config_data.LOCAL_DOWNLOAD_DIR + image.name)
-
-            image.load_pristine()
-
-        # Note that we just need to boot, not install
-        else:
-            boot = True
-
-    # Determine if we want to grow the disk. Currently we only do this if the
-    # instance to be booted is a fresh Atomic image.
-
-    expand_disk = False
-
-    if atomic and pristine:
-        expand_disk = True
-
-    if pristine:
-        vm.selfdestruct()
-        vm.create_instance()
-        vm.spawn(expand_disk=expand_disk)
-
-    else:
-        if boot:
-            vm.boot()
-        else:
-            vm.create_instance()
-            vm.spawn(expand_disk=expand_disk)
-
-    return vm
-
-
-def main():
-    import argparse
-
+def get_argparser():
     parser = argparse.ArgumentParser()
     parser.add_argument("url",
                         help="URL to qcow2 image is required.",
@@ -124,16 +51,49 @@ def main():
     parser.add_argument("--name",
                         help="A unique name to use for your instance.",
                         default='testCloud')
+
+    return parser
+
+def main():
+    parser = get_argparser()
     args = parser.parse_args()
 
-    install(args.url,
-            args.name,
-            args.ram,
-            graphics=args.no_graphic,
-            vnc=args.vnc,
-            atomic=args.atomic,
-            pristine=args.pristine)
+    # get/find image
+    # look for existing instance
+    # if not exist:
+    #   prepare metadata
+    #   boot vm
 
+    tc_image = image.Image(args.url)
+    tc_image.prepare()
+
+    instance_path = instance.find(args.name, tc_image.name)
+
+    # for the moment, rebooting existing instances is noworky, so blow up early
+    if instance_path is not None:
+        raise NotImplementedError("testCloud does not yet support booting " \
+                                  "existing instances. Please remove {} before"\
+                                  " continuing".format(instance_path))
+
+    else:
+        tc_instance = instance.Instance(args.name, tc_image)
+
+        # prepare instance
+        tc_instance.prepare()
+
+        # boot instance
+        tc_instance.spawn_vm()
+
+    # look for data about instance (mac, IP, etc.)
+
+#    install(args.url,
+#            args.name,
+#            args.ram,
+#            graphics=args.no_graphic,
+#            vnc=args.vnc,
+#            atomic=args.atomic,
+#            pristine=args.pristine)
+#
     #  It takes a bit for the instance to get registered in virsh,
     #  so here we keep asking for the domain we created until virsh
     #  finally decides to cough up the information.
@@ -149,7 +109,7 @@ def main():
         else:
             sleep(.2)
     else:
-        raise libtc.DomainNotFoundError
+        raise DomainNotFoundError
 
     vm_mac = util.find_mac(vm_xml)
     vm_mac = vm_mac[0]

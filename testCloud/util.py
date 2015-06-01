@@ -12,68 +12,15 @@ import os
 import shutil
 import glob
 import subprocess
-import libvirt
+import logging
 
+import libvirt
 import xml.etree.ElementTree as ET
 
 from . import config
-from .libtestcloud import log
 
-
+log = logging.getLogger('testCloud.util')
 config_data = config.get_config()
-
-def create_user_data(path, password, overwrite=False, atomic=False):
-    """Save the right  password to the 'user-data' file needed to
-    emulate cloud-init. Default username on cloud images is "fedora"
-
-    Will not overwrite an existing user-data file unless
-    the overwrite kwarg is set to True."""
-
-    if atomic:
-        file_data = config_data.ATOMIC_USER_DATA % password
-
-    else:
-        file_data = config_data.USER_DATA % password
-
-    if os.path.isfile(path + '/meta/user-data'):
-        if overwrite:
-
-            with open(path + '/meta/user-data', 'w') as user_file:
-                user_file.write(file_data)
-
-                return "user-data file generated."
-        else:
-            return "user-data file already exists"
-
-    with open(path + '/meta/user-data', 'w') as user_file:
-        user_file.write(file_data)
-
-    return "user-data file generated."
-
-
-def create_meta_data(path, hostname, overwrite=False):
-    """Save the required hostname data to the 'meta-data' file needed to
-    emulate cloud-init.
-
-    Will not overwrite an existing user-data file unless
-    the overwrite kwarg is set to True."""
-
-    file_data = config_data.META_DATA % hostname
-
-    if os.path.isfile(path + '/meta/meta-data'):
-        if overwrite:
-
-            with open(path + '/meta/meta-data', 'w') as meta_data_file:
-                meta_data_file.write(file_data)
-
-                return "meta-data file generated."
-        else:
-            return "meta-data file already exists"
-
-    with open(path + '/meta/meta-data', 'w') as meta_data_file:
-        meta_data_file.write(file_data)
-
-    return "meta-data file generated."
 
 
 def create_dirs():
