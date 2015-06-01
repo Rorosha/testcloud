@@ -10,6 +10,10 @@ This is the primary user entry point for testCloud
 
 import argparse
 import logging
+import sys
+from pprint import pprint
+
+import libvirt
 
 from . import config
 from . import image
@@ -20,43 +24,206 @@ from . import instance
 from time import sleep
 from . import util
 #import libvirt
-from .exceptions import DomainNotFoundError
+from .exceptions import DomainNotFoundError, TestCloudCliError
 
 config_data = config.get_config()
 
 log = logging.getLogger('libtestcloud')
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
+description = """TestCloud is a small wrapper program designed to quickly and
+simply boot images designed for cloud systems."""
+
+
+################################################################################
+# instance handling functions
+################################################################################
+
+def _list_instance(args):
+    """Handler for 'instance create' command. Expects the following elements in args:
+        * name(str)
+
+    :param args: args from argparser
+    """
+    log.debug("list instance")
+    instances = instance.list_instances()
+    print("Current Instances:")
+    for inst in instances:
+        print("  {}".format(inst))
+
+def _create_instance(args):
+    """Handler for 'instance create' command. Expects the following elements in args:
+        * name(str)
+
+    :param args: args from argparser
+    """
+
+    log.debug("create instance")
+    pprint(args)
+
+    tc_image = image.Image(args.url)
+    tc_image.prepare()
+
+    instance_path = instance.find_instance_path(args.name, tc_image.name)
+
+    # can't create existing instances
+    if instance_path is not None:
+        raise TestCloudCliError("A testCloud instance named {} already "\
+                                "exists at {}. Use 'testcloud instance start "\
+                                "{}' to start the instance or remove it before"\
+                                " re-creating ".format(args.name,
+                                                       instance_path,
+                                                       args.name))
+
+    else:
+        tc_instance = instance.Instance(args.name, tc_image)
+
+        # prepare instance
+        tc_instance.prepare()
+
+        # boot instance
+        tc_instance.spawn_vm()
+
+        # find vm ip
+        vm_ip = find_vm_ip(args.name)
+        print("The IP of vm {}:  {}".format(args.name, vm_ip))
+
+def _start_instance(args):
+    """Handler for 'instance start' command. Expects the following elements in args:
+        * name(str)
+
+    :param args: args from argparser
+    """
+    log.debug("start instance: {}".format(args.name))
+
+def _stop_instance(args):
+    """Handler for 'instance stop' command. Expects the following elements in args:
+        * name(str)
+
+    :param args: args from argparser
+    """
+    log.debug("stop instance: {}".format(args.name))
+
+def _destroy_instance(args):
+    """Handler for 'instance destroy' command. Expects the following elements in args:
+        * name(str)
+
+    :param args: args from argparser
+    """
+    log.debug("destroy instance: {}".format(args.name))
+
+
+################################################################################
+# image handling functions
+################################################################################
+def _list_image(args):
+    """Handler for 'image list' command. Does not expect anything else in args.
+
+    :param args: args from argparser
+    """
+    log.debug("list images")
+    images = image.list_images()
+    print("Current Images:")
+    for img in images:
+        print("  {}".format(img))
+
+def _destroy_image(args):
+    """Handler for 'image destroy' command. Expects the following elements in args:
+        * name(str)
+
+    :param args: args from argparser
+    """
+
+    log.debug("destroying image {}".format(args.name))
+
+
 def get_argparser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("url",
-                        help="URL to qcow2 image is required.",
-                        type=str)
-    parser.add_argument("--ram",
+    parser = argparse.ArgumentParser(description = description)
+    subparsers = parser.add_subparsers(title="Command Types",
+                                       description="Types of commands available",
+                                       help="<command> help")
+
+
+    instarg = subparsers.add_parser("instance", help="help on instance options")
+    instarg.add_argument("-c",
+                         "--connection",
+                         default="qemu:///system",
+                         help="libvirt connection url to use")
+    instarg_subp = instarg.add_subparsers(title="instance commands",
+                                          description="Commands available for instance operations",
+                                          help="<command> help")
+
+    #instance list
+    instarg_list = instarg_subp.add_parser("list", help="list instances")
+    instarg_list.set_defaults(func=_list_instance)
+
+    #instance start
+    instarg_start = instarg_subp.add_parser("start", help="start instance")
+    instarg_start.add_argument("name",
+                         help="name of instance to start")
+    instarg_start.set_defaults(func=_start_instance)
+
+    #instance stop
+    instarg_stop = instarg_subp.add_parser("stop", help="stop instance")
+    instarg_stop.add_argument("name",
+                         help="name of instance to stop")
+    instarg_stop.set_defaults(func=_stop_instance)
+
+    #instance destroy
+    instarg_destroy = instarg_subp.add_parser("destroy", help="destroy instance")
+    instarg_destroy.add_argument("name",
+                         help="name of instance to destroy")
+    instarg_destroy.set_defaults(func=_destroy_instance)
+
+    #instance create
+    instarg_create = instarg_subp.add_parser("create", help="create instance")
+    instarg_create.set_defaults(func=_create_instance)
+    instarg_create.add_argument("name",
+                         help="name of instance to create")
+    instarg_create.add_argument("--ram",
                         help="Specify the amount of ram for the VM.",
                         type=int,
                         default=512)
-    parser.add_argument("--no-graphic",
+    instarg_create.add_argument("--no-graphic",
                         help="Turn off graphical display.",
                         action="store_true")
-    parser.add_argument("--vnc",
+    instarg_create.add_argument("--vnc",
                         help="Turns on vnc at :1 to the instance.",
                         action="store_true")
-    parser.add_argument("--atomic",
+    instarg_create.add_argument("--atomic",
                         help="Use this flag if you're booting an Atomic Host.",
                         action="store_true")
-    parser.add_argument("--pristine",
-                        help="Use a clean copy of an image.",
-                        action="store_true")
-    parser.add_argument("--name",
-                        help="A unique name to use for your instance.",
-                        default='testCloud')
+    # this might work better as a second, required positional arg
+    instarg_create.add_argument("-u",
+                         "--url",
+                         help="URL to qcow2 image is required.",
+                         type=str)
+
+
+    imgarg = subparsers.add_parser("image", help="help on image options")
+    imgarg_subp = imgarg.add_subparsers(title="subcommands",
+                                        description="Types of commands available",
+                                        help="<command> help")
+
+    #image list
+    imgarg_list = imgarg_subp.add_parser("list", help="list images")
+    imgarg_list.set_defaults(func=_list_image)
+
+    #image destroy
+    imgarg_destroy = imgarg_subp.add_parser("destroy", help="destroy image")
+    imgarg_destroy.add_argument("name",
+                                help="name of image to destroy")
+    imgarg_destroy.set_defaults(func=_destroy_image)
 
     return parser
+
 
 def main():
     parser = get_argparser()
     args = parser.parse_args()
+
+    args.func(args)
+    sys.exit(1)
 
     # get/find image
     # look for existing instance
@@ -67,7 +234,7 @@ def main():
     tc_image = image.Image(args.url)
     tc_image.prepare()
 
-    instance_path = instance.find(args.name, tc_image.name)
+    instance_path = instance.find_instance(args.name, tc_image.name)
 
     # for the moment, rebooting existing instances is noworky, so blow up early
     if instance_path is not None:
@@ -98,11 +265,20 @@ def main():
     #  so here we keep asking for the domain we created until virsh
     #  finally decides to cough up the information.
 
+
+def find_vm_ip(name):
+    """Finds the ip of a local vm given it's name used by libvirt.
+
+    :param name: name of the VM (as used by libvirt)
+    :returns: ip address of VM
+    :rtype: str
+    """
+
     log.info("Don't worry about these 'QEMU Driver' errors. libvirt is whiny " + \
           "and has no method to shut it up...\n")
 
     for _ in xrange(100):
-        vm_xml = util.get_vm_xml(args.name)
+        vm_xml = util.get_vm_xml(name)
         if vm_xml is not None:
             break
 
@@ -123,7 +299,8 @@ def main():
         if vm_ip: break
         sleep(.2)
 
-    print("The IP of your VM is: {}".format(vm_ip))
+    #print("The IP of your VM is: {}".format(vm_ip))
+    return vm_ip
 
 
 if __name__ == '__main__':

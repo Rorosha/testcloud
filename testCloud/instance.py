@@ -22,7 +22,7 @@ config_data = config.get_config()
 
 log = logging.getLogger('testCloud.instance')
 
-def find(name, image):
+def find_instance_path(name, image):
     instance_dir = '{}/instances'.format(config_data.DATA_DIR)
     instances = os.listdir(instance_dir)
 
@@ -31,6 +31,21 @@ def find(name, image):
             return os.path.join(instance_dir, inst)
 
     return None
+
+def find_instance(name, image):
+    instance_dir = '{}/instances'.format(config_data.DATA_DIR)
+    instances = os.listdir(instance_dir)
+    for inst in instances:
+        if name == inst:
+            return Instance(name, image)
+    return None
+
+
+def list_instances():
+    instance_dir = '{}/instances'.format(config_data.DATA_DIR)
+    instances = os.listdir(instance_dir)
+
+    return instances
 
 class Instance(object):
     """The Instance class handles the creation, location and customization
@@ -274,4 +289,17 @@ class Instance(object):
                               cmd,
                               self.name
                               ])
+    def start(self):
+        """Start the instance"""
+        raise NotImplementedError("Instance start is not yet implemented")
+
+    def stop(self):
+        """Stop the instance"""
+        raise NotImplementedError("Instance stop is not yet implemented")
+
+    def destroy(self):
+        """Stop the instance"""
+        raise NotImplementedError("Instance destruction is not yet implemented")
+
+
 

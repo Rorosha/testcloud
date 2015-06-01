@@ -25,6 +25,12 @@ config_data = config.get_config()
 
 log = logging.getLogger('testCloud.image')
 
+def list_images():
+    image_dir = '{}/cache'.format(config_data.DATA_DIR)
+    images = os.listdir(image_dir)
+
+    return images
+
 class Image(object):
     """Handles base cloud images and prepares them for boot. This includes
     downloading images from remote systems (http, https supported) or copying

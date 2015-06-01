@@ -48,7 +48,7 @@ class TestFindInstance(object):
         stub_listdir.return_value = []
         monkeypatch.setattr(os, 'listdir', stub_listdir)
 
-        test_instance = instance.find(ref_name, ref_image)
+        test_instance = instance.find_instance_path(ref_name, ref_image)
 
         assert test_instance is None
 
@@ -63,6 +63,6 @@ class TestFindInstance(object):
         stub_listdir.return_value = [ref_name]
         monkeypatch.setattr(os, 'listdir', stub_listdir)
 
-        test_instance = instance.find(ref_name, ref_image)
+        test_instance = instance.find_instance_path(ref_name, ref_image)
 
         assert test_instance == ref_path

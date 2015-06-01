@@ -13,6 +13,10 @@ class TestCloudException(BaseException):
     """Common ancestor for all TestCloud exceptions"""
     pass
 
+class TestCloudCliError(TestCloudException):
+    """Exception for errors having to do with TestCloud CLI processing"""
+    pass
+
 class TestCloudImageError(TestCloudException):
     """Exception for errors having to do with images and image fetching"""
     pass
