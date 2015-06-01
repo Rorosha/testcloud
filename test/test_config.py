@@ -7,9 +7,11 @@
 from testCloud import config
 
 
-REF_DOWNLOAD_DIR = "/some/random/dir/for/testing/"
-REF_CONF_CONTENTS = """LOCAL_DOWNLOAD_DIR = "{}"
-""".format(REF_DOWNLOAD_DIR)
+REF_DATA_DIR = "/some/random/dir/for/testing/"
+REF_CACHE_DIR = "/some/random/dir/for/testing/cache/"
+REF_CONF_CONTENTS = """DATA_DIR = "{}"
+CACHE_DIR = "{}/cache"
+""".format(REF_DATA_DIR, REF_CACHE_DIR)
 
 class TestConfig(object):
     def setup_method(self, method):
@@ -47,7 +49,7 @@ class TestConfig(object):
 
         test_config = config._load_config(ref_conf_filename)
 
-        assert test_config.LOCAL_DOWNLOAD_DIR == REF_DOWNLOAD_DIR
+        assert test_config.DATA_DIR == REF_DATA_DIR
 
     def test_merge_config_file(self, tmpdir):
         '''merge loaded config object with defaults, make sure that the defaults
@@ -62,10 +64,10 @@ class TestConfig(object):
         test_config_obj = config._load_config(ref_conf_filename)
 
         test_config = config.ConfigData()
-        assert test_config.LOCAL_DOWNLOAD_DIR != REF_DOWNLOAD_DIR
+        assert test_config.DATA_DIR != REF_DATA_DIR
 
         test_config.merge_object(test_config_obj)
-        assert test_config.LOCAL_DOWNLOAD_DIR == REF_DOWNLOAD_DIR
+        assert test_config.DATA_DIR == REF_DATA_DIR
 
     def test_load_merge_config_file(self, tmpdir, monkeypatch):
         '''get config, making sure that an addional config file is found. make
@@ -80,5 +82,5 @@ class TestConfig(object):
         monkeypatch.setattr(config, 'CONF_DIRS', [str(refdir)])
         test_config = config.get_config()
 
-        assert test_config.LOCAL_DOWNLOAD_DIR == REF_DOWNLOAD_DIR
+        assert test_config.DATA_DIR == REF_DATA_DIR
 

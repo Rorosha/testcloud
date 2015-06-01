@@ -84,8 +84,11 @@ class ConfigData(object):
 
     # Directories testCloud cares about
 
-    PRISTINE = "/home/{}/.local/share/testcloud/images/".format(os.getlogin())
-    LOCAL_DOWNLOAD_DIR = "/var/tmp/"
+    DATA_DIR = "/var/lib/testCloud"
+    CACHE_DIR = "/var/lib/testCloud/cache"
+
+#    PRISTINE = "/home/{}/.local/share/testcloud/images/".format(os.getlogin())
+#    LOCAL_DOWNLOAD_DIR = "/var/tmp/"
 
     # Data for cloud-init
 

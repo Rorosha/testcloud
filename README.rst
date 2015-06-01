@@ -20,6 +20,32 @@ Optional:
 All of these packages are in the Fedora repos (and likely other distros as
 well).
 
+For the moment, the follwing directories need to exist with permissions that
+allow modification by any permitted user::
+
+  /var/lib/testCloud/
+  /var/lib/testCloud/instances
+  /var/lib/testCloud/cache
+
+This will be automagical in a future version of testCloud and is a side-effect
+of the current refactoring/transition process.
+
+If you are running testCloud as a non-administrative user (ie. not in wheel) or
+on a system that doesn't have a polkit agent running (custom setups, headless
+systems etc.), you may need to adjust local polkit configuration to allow non-root
+users to manage VMs with libvirt. Add the following data into ``/etc/polkit-1/localauthority/50-local.d/50-nonrootlivirt.pkla``::
+
+  [nonroot libvirt system connection]
+  Identity=unix-group:testcloud
+  Action=org.libvirt.unix.manage
+  ResultActive=yes
+  ResultInactive=yes
+  ResultAny=yes
+
+After writing that file, restart polkit (``systemctl restart polkit``) and if
+the user in question is a member of the unix group ``testcloud``, that user
+should be able to run testCloud with no additional permissions.
+
 Usage
 -----
 

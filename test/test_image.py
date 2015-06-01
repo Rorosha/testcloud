@@ -8,7 +8,7 @@
 
 import pytest
 
-from testCloud import libtestcloud
+from testCloud import image
 from testCloud.exceptions import TestCloudImageError
 
 class TestImage:
@@ -22,11 +22,11 @@ class TestImage:
     def test_download(self):
         pass
 
-    def test_save_pristine(self):
-        pass
-
-    def test_load_pristine(self):
-        pass
+#    def test_save_pristine(self):
+#        pass
+#
+#    def test_load_pristine(self):
+#        pass
 
 class TestImageUriProcess(object):
     """The basic idea of what these tests do is to make sure that uris are
@@ -43,7 +43,7 @@ class TestImageUriProcess(object):
         ref_path = 'localhost/images/{}'.format(self.image_name)
         ref_uri = '{}://{}'.format(ref_type, ref_path)
 
-        test_image = libtestcloud.Image(ref_uri)
+        test_image = image.Image(ref_uri)
         test_data = test_image._process_uri(ref_uri)
 
         assert len(test_data) == self.len_data
@@ -56,7 +56,7 @@ class TestImageUriProcess(object):
         ref_path = 'localhost/images/{}'.format(self.image_name)
         ref_uri = '{}://{}'.format(ref_type, ref_path)
 
-        test_image = libtestcloud.Image(ref_uri)
+        test_image = image.Image(ref_uri)
         test_data = test_image._process_uri(ref_uri)
 
         assert len(test_data) == self.len_data
@@ -69,7 +69,7 @@ class TestImageUriProcess(object):
         ref_path = '/srv/images/{}'.format(self.image_name)
         ref_uri = '{}://{}'.format(ref_type, ref_path)
 
-        test_image = libtestcloud.Image(ref_uri)
+        test_image = image.Image(ref_uri)
         test_data = test_image._process_uri(ref_uri)
 
         assert len(test_data) == self.len_data
@@ -83,10 +83,10 @@ class TestImageUriProcess(object):
         ref_uri = '{}://{}'.format(ref_type, ref_path)
 
         with pytest.raises(TestCloudImageError):
-            libtestcloud.Image(ref_uri)
+            image.Image(ref_uri)
 
     def test_invalid_uri(self):
         ref_uri = 'leprechaunhandywork'
 
         with pytest.raises(TestCloudImageError):
-            libtestcloud.Image(ref_uri)
+            image.Image(ref_uri)

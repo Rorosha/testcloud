@@ -10,10 +10,9 @@ import os
 
 #DOWNLOAD_PROGRESS = True
 
-# Directories testCloud cares about
-
-#PRISTINE = "/home/{}/.local/share/testcloud/images/".format(os.getlogin())
-#LOCAL_DOWNLOAD_DIR = "/var/tmp/"
+# Directories for data and cached downloaded images
+#DATA_DIR = "/var/lib/testCloud/"
+#CACHE_DIR = "/var/lib/testCloud/cache"
 
 # Data for cloud-init
 
