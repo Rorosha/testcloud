@@ -14,6 +14,9 @@ import sys
 import subprocess
 import glob
 import logging
+from pprint import pprint
+
+import libvirt
 
 from . import config
 from .exceptions import TestCloudInstanceError
@@ -22,28 +25,76 @@ config_data = config.get_config()
 
 log = logging.getLogger('testCloud.instance')
 
-def find_instance_path(name, image):
+# mapping libvirt constants to a known set of strings
+DOMAIN_STATUS_ENUM = { libvirt.VIR_DOMAIN_NOSTATE: 'no state',
+                       libvirt.VIR_DOMAIN_RUNNING: 'running',
+                       libvirt.VIR_DOMAIN_BLOCKED: 'blocked',
+                       libvirt.VIR_DOMAIN_PAUSED:  'paused',
+                       libvirt.VIR_DOMAIN_SHUTDOWN: 'shutdown',
+                       libvirt.VIR_DOMAIN_SHUTOFF: 'shutoff',
+                       libvirt.VIR_DOMAIN_CRASHED: 'crashed',
+                       libvirt.VIR_DOMAIN_PMSUSPENDED: 'suspended'
+                       }
+
+
+def _list_instances():
+    """List existing instances currently known to testcloud
+
+    :returns: list of instance names
+    """
+
     instance_dir = '{}/instances'.format(config_data.DATA_DIR)
-    instances = os.listdir(instance_dir)
+    return os.listdir(instance_dir)
 
-    for inst in instances:
-        if name == inst:
-            return os.path.join(instance_dir, inst)
+def _list_system_domains(connection):
+    """List known domains for a given hypervisor connection.
 
-    return None
+    :param connection: libvirt compatible hypervisor connection
+    :returns: dictionary mapping of name:state
+    :rtype: dict
+    """
+
+    domains = {}
+    conn = libvirt.openReadOnly(connection)
+    for domain in conn.listAllDomains():
+        # the libvirt docs seem to indicate that the second int is for state
+        # details, only used when state is ERROR, so only looking at the first
+        # int returned for domain.state()
+
+        domains[domain.name()] = DOMAIN_STATUS_ENUM[domain.state()[0]]
+
+    return domains
 
 def find_instance(name, image):
-    instance_dir = '{}/instances'.format(config_data.DATA_DIR)
-    instances = os.listdir(instance_dir)
+    """Find an instance using a given name and image, if it exists.
+
+    :param name: name of instance to find
+    :param image: :py:class:`testCloud.image.Image`
+    :returns: :py:class:`Instance` if the instance exists, None if it doesn't
+    """
+
+    instances = _list_instances()
     for inst in instances:
         if name == inst:
             return Instance(name, image)
     return None
 
+def list_instances(connection='qemu:///system'):
+    """List instances known by testCloud and the state of each instance
 
-def list_instances():
-    instance_dir = '{}/instances'.format(config_data.DATA_DIR)
-    instances = os.listdir(instance_dir)
+    :param connection: libvirt compatible connection to use when listing domains
+    :returns: dictionary of instance_name to domain_state mapping
+    """
+    system_domains = _list_system_domains(connection)
+    all_instances = _list_instances()
+
+    instances = {}
+    for instance in all_instances:
+        if instance not in all_instances:
+            raise TestCloudInstanceError("instance {} exists in instances/ "\
+                                         "but is not a libvirt domain on "\
+                                         "{}".format(instance, connection))
+        instances[instance] = system_domains[instance]
 
     return instances
 

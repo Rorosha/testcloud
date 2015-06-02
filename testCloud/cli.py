@@ -13,8 +13,6 @@ import logging
 import sys
 from pprint import pprint
 
-import libvirt
-
 from . import config
 from . import image
 from . import instance
@@ -45,11 +43,15 @@ def _list_instance(args):
 
     :param args: args from argparser
     """
-    log.debug("list instance")
     instances = instance.list_instances()
-    print("Current Instances:")
-    for inst in instances:
-        print("  {}".format(inst))
+
+    print("{:<40} {:<10}".format("Name", "State"))
+    print("--------------------------------------------------")
+    for inst in instances.keys():
+        if args.all or instances[inst] == 'running':
+            print("{:<40} {:<10}".format(inst, instances[inst]))
+
+    print("")
 
 def _create_instance(args):
     """Handler for 'instance create' command. Expects the following elements in args:
@@ -64,15 +66,15 @@ def _create_instance(args):
     tc_image = image.Image(args.url)
     tc_image.prepare()
 
-    instance_path = instance.find_instance_path(args.name, tc_image.name)
+    existing_instance = instance.find_instance(args.name, tc_image)
 
     # can't create existing instances
-    if instance_path is not None:
+    if existing_instance is not None:
         raise TestCloudCliError("A testCloud instance named {} already "\
                                 "exists at {}. Use 'testcloud instance start "\
                                 "{}' to start the instance or remove it before"\
                                 " re-creating ".format(args.name,
-                                                       instance_path,
+                                                       existing_instance.path,
                                                        args.name))
 
     else:
@@ -156,6 +158,9 @@ def get_argparser():
     #instance list
     instarg_list = instarg_subp.add_parser("list", help="list instances")
     instarg_list.set_defaults(func=_list_instance)
+    instarg_list.add_argument("--all",
+                              help="list all instances, running and stopped",
+                              action="store_true")
 
     #instance start
     instarg_start = instarg_subp.add_parser("start", help="start instance")

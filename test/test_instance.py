@@ -10,7 +10,7 @@ import os
 
 import mock
 
-from testCloud import instance, config
+from testCloud import instance, image, config
 
 class TestInstance:
 
@@ -42,20 +42,20 @@ class TestFindInstance(object):
 
     def test_non_existant_instance(self, monkeypatch):
         ref_name = 'test-123'
-        ref_image = 'someimage.qcow2'
+        ref_image = image.Image('file:///someimage.qcow2')
 
         stub_listdir = mock.Mock()
         stub_listdir.return_value = []
         monkeypatch.setattr(os, 'listdir', stub_listdir)
 
-        test_instance = instance.find_instance_path(ref_name, ref_image)
+        test_instance = instance.find_instance(ref_name, ref_image)
 
         assert test_instance is None
 
 
     def test_find_exist_instance(self, monkeypatch):
         ref_name = 'test-123'
-        ref_image = 'someimage.qcow2'
+        ref_image = image.Image('file:///someimage.qcow2')
         ref_path = os.path.join(self.conf.DATA_DIR,
                                 'instances/{}'.format(ref_name))
 
@@ -63,6 +63,7 @@ class TestFindInstance(object):
         stub_listdir.return_value = [ref_name]
         monkeypatch.setattr(os, 'listdir', stub_listdir)
 
-        test_instance = instance.find_instance_path(ref_name, ref_image)
+        test_instance = instance.find_instance(ref_name, ref_image)
 
-        assert test_instance == ref_path
+        assert test_instance.path == ref_path
+
