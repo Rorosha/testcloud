@@ -98,6 +98,14 @@ def _start_instance(args):
     """
     log.debug("start instance: {}".format(args.name))
 
+    tc_instance = instance.find_instance(args.name)
+
+    if tc_instance is None:
+        raise TestCloudCliError("Cannot start instance {} because it does "\
+                                "not exist".format(args.name))
+
+    tc_instance.start()
+
 def _stop_instance(args):
     """Handler for 'instance stop' command. Expects the following elements in args:
         * name(str)
@@ -106,6 +114,14 @@ def _stop_instance(args):
     """
     log.debug("stop instance: {}".format(args.name))
 
+    tc_instance = instance.find_instance(args.name)
+
+    if tc_instance is None:
+        raise TestCloudCliError("Cannot stop instance {} because it does "\
+                                "not exist".format(args.name))
+
+    tc_instance.stop()
+
 def _destroy_instance(args):
     """Handler for 'instance destroy' command. Expects the following elements in args:
         * name(str)
@@ -113,6 +129,14 @@ def _destroy_instance(args):
     :param args: args from argparser
     """
     log.debug("destroy instance: {}".format(args.name))
+
+    tc_instance = instance.find_instance(args.name)
+
+    if tc_instance is None:
+        raise TestCloudCliError("Cannot remove instance {} because it does "\
+                                "not exist".format(args.name))
+
+    tc_instance.destroy()
 
 
 ################################################################################
@@ -137,6 +161,13 @@ def _destroy_image(args):
     """
 
     log.debug("destroying image {}".format(args.name))
+
+    tc_image = image.find_image(args.name)
+
+    if tc_image is None:
+        log.error("image {} not found, cannot destroy".format(args.name))
+
+    tc_image.destroy()
 
 
 def get_argparser():

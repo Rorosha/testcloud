@@ -17,6 +17,7 @@ import logging
 from pprint import pprint
 
 import libvirt
+import shutil
 
 from . import config
 from .exceptions import TestCloudInstanceError
@@ -65,7 +66,7 @@ def _list_system_domains(connection):
 
     return domains
 
-def find_instance(name, image):
+def find_instance(name, image=None):
     """Find an instance using a given name and image, if it exists.
 
     :param name: name of instance to find
@@ -102,7 +103,7 @@ class Instance(object):
     """The Instance class handles the creation, location and customization
     of existing testCloud instances (which are qcow2 backed from an Image)"""
 
-    def __init__(self, name, image):
+    def __init__(self, name, image=None):
         self.name = name
         self.image = image
         self.path = "{}/instances/{}".format(config_data.DATA_DIR, self.name)
@@ -119,7 +120,7 @@ class Instance(object):
         self.initrd = None
 
         # get rid of
-        self.backing_store = image.local_path
+        self.backing_store = image.local_path if image else None
         self.image_path = config_data.CACHE_DIR + self.name + ".qcow2"
 
     def prepare(self):
@@ -216,6 +217,12 @@ class Instance(object):
         # cache for each instance
         # for now, assuming that it doesn't
 
+        if self.image is None:
+            raise TestCloudInstanceError("attempted to access image "\
+                                         "information for instance {} but "\
+                                         "that information was not supplied "\
+                                         "at creation time".format(self.name))
+
         log.info("extracting kernel and initrd from {}".format(self.image.local_path))
         subprocess.call(['virt-builder', '--get-kernel',
                          self.image.local_path],
@@ -232,6 +239,12 @@ class Instance(object):
 
     def _create_local_disk(self):
         """Create a instance using the backing store provided by Image."""
+
+        if self.image is None:
+            raise TestCloudInstanceError("attempted to access image "\
+                                         "information for instance {} but "\
+                                         "that information was not supplied "\
+                                         "at creation time".format(self.name))
 
         subprocess.call(['qemu-img',
                          'create',
@@ -332,7 +345,7 @@ class Instance(object):
                           self.name
                           ])
 
-    def selfdestruct(self):
+    def _destroy_virsh_instance(self):
         """Remove an instance from virsh."""
 
         for cmd in ['destroy', 'undefine']:
@@ -340,17 +353,60 @@ class Instance(object):
                               cmd,
                               self.name
                               ])
+
+    def _run_virsh_command(self, command):
+        subprocess.Popen(['virsh',
+                          '-c',
+                          'qemu:///system',
+                          command,
+                          self.name
+                          ])
+
     def start(self):
         """Start the instance"""
-        raise NotImplementedError("Instance start is not yet implemented")
+
+        log.debug("starting instance {} with virsh".format(self.name))
+
+        # stop (destroy) the vm using virsh
+        self._run_virsh_command('start')
+
 
     def stop(self):
         """Stop the instance"""
-        raise NotImplementedError("Instance stop is not yet implemented")
+
+        log.debug("stopping instance {} with virsh".format(self.name))
+
+        # stop (destroy) the vm using virsh
+        self._run_virsh_command('destroy')
+
 
     def destroy(self):
-        """Stop the instance"""
-        raise NotImplementedError("Instance destruction is not yet implemented")
+        """Destroy an already stopped instance
+
+        :raises TestCloudInstanceError: if the image does not exist or is still
+                                        running
+        """
+
+        log.debug("removing instance {} from libvirt with "
+                  "virsh".format(self.name))
+
+        # this should be changed if/when we start supporting configurable
+        # libvirt connections
+        system_domains = _list_system_domains("qemu:///system")
+        if self.name in system_domains and \
+                system_domains[self.name] == 'running':
+
+            raise TestCloudInstanceError("Cannot remove running instance {}. "
+                                         "Please stop the instance before "
+                                         "removing.".format(self.name))
+
+        # remove from virsh, assuming that it's stopped already
+        self._run_virsh_command('undefine')
+
+        log.debug("removing instance {} from disk".format(self.path))
+
+        # remove from disk
+        shutil.rmtree(self.path)
 
 
 

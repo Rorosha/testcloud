@@ -31,6 +31,16 @@ def list_images():
 
     return images
 
+def find_image(name, uri=None):
+    images = list_images()
+
+    if name in images:
+        if uri is None:
+            uri = 'file://{}/cache/{}'.format(config_data.DATA_DIR, name)
+        return Image(uri)
+    else:
+        return None
+
 class Image(object):
     """Handles base cloud images and prepares them for boot. This includes
     downloading images from remote systems (http, https supported) or copying
@@ -183,6 +193,11 @@ class Image(object):
         self._adjust_image_selinux(self.local_path)
 
         return self.local_path
+
+    def destroy(self):
+        log.debug("destroying image {}".format(self.local_path))
+
+        os.remove(self.local_path)
 
 #    def save_pristine(self):
 #        """Save a copy of the downloaded image to the config_dataured PRISTINE dir.
