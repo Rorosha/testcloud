@@ -25,11 +25,13 @@ config_data = config.get_config()
 
 log = logging.getLogger('testCloud.image')
 
+
 def list_images():
     image_dir = '{}/cache'.format(config_data.DATA_DIR)
     images = os.listdir(image_dir)
 
     return images
+
 
 def find_image(name, uri=None):
     images = list_images()
@@ -40,6 +42,7 @@ def find_image(name, uri=None):
         return Image(uri)
     else:
         return None
+
 
 class Image(object):
     """Handles base cloud images and prepares them for boot. This includes
@@ -81,7 +84,8 @@ class Image(object):
         type_match = re.search(r'(http|https|file)://([\w\.\-/]+)', uri)
 
         if not type_match:
-            raise TestCloudImageError('invalid uri: only http, https and file uris are supported: {}'.format(uri))
+            raise TestCloudImageError('invalid uri: only http, https and file uris'
+                                      ' are supported: {}'.format(uri))
 
         uri_type = type_match.group(1)
         uri_path = type_match.group(2)
@@ -93,7 +97,6 @@ class Image(object):
 
         image_name = name_match[-1]
         return {'type': uri_type, 'name': image_name, 'path': uri_path}
-
 
     def _download_remote_image(self, remote_url, local_path):
         """Download a remote image to the local system, outputting download
@@ -145,7 +148,6 @@ class Image(object):
         if not os.path.exists(dest_path):
             shutil.copy(source_path, dest_path)
 
-
     def _adjust_image_selinux(self, image_path):
         """If SElinux is enabled on the system, change the context of that image
         file such that libguestfs and qemu can use it.
@@ -170,7 +172,6 @@ class Image(object):
         else:
             log.error('Error while changing SELinux context on '
                       'image {}'.format(image_path))
-
 
     def prepare(self):
         """Prepare the image for local use by either downloading the image from

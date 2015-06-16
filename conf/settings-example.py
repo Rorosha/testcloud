@@ -1,6 +1,3 @@
-import os
-
-
 # Commented out default values with details are displayed below. To override
 # these default values, uncomment the values, rename the file to settings.py
 # and place it in a supported config location

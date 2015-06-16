@@ -6,8 +6,8 @@
 
 """ This module is for testing the behaviour of cli functions."""
 
-class TestCLI:
 
+class TestCLI:
     def test_run(self):
         pass
 

@@ -18,10 +18,9 @@ from . import image
 from . import instance
 
 # these are used in commented out code, may be reactivated
-#import os
+
 from time import sleep
 from . import util
-#import libvirt
 from .exceptions import DomainNotFoundError, TestCloudCliError
 
 config_data = config.get_config()
@@ -38,7 +37,7 @@ simply boot images designed for cloud systems."""
 ################################################################################
 
 def _list_instance(args):
-    """Handler for 'instance create' command. Expects the following elements in args:
+    """Handler for 'list' command. Expects the following elements in args:
         * name(str)
 
     :param args: args from argparser
@@ -52,6 +51,7 @@ def _list_instance(args):
             print("{:<40} {:<10}".format(inst, instances[inst]))
 
     print("")
+
 
 def _create_instance(args):
     """Handler for 'instance create' command. Expects the following elements in args:
@@ -70,9 +70,9 @@ def _create_instance(args):
 
     # can't create existing instances
     if existing_instance is not None:
-        raise TestCloudCliError("A testCloud instance named {} already "\
-                                "exists at {}. Use 'testcloud instance start "\
-                                "{}' to start the instance or remove it before"\
+        raise TestCloudCliError("A testCloud instance named {} already "
+                                "exists at {}. Use 'testcloud instance start "
+                                "{}' to start the instance or remove it before"
                                 " re-creating ".format(args.name,
                                                        existing_instance.path,
                                                        args.name))
@@ -90,6 +90,7 @@ def _create_instance(args):
         vm_ip = find_vm_ip(args.name)
         print("The IP of vm {}:  {}".format(args.name, vm_ip))
 
+
 def _start_instance(args):
     """Handler for 'instance start' command. Expects the following elements in args:
         * name(str)
@@ -101,10 +102,11 @@ def _start_instance(args):
     tc_instance = instance.find_instance(args.name)
 
     if tc_instance is None:
-        raise TestCloudCliError("Cannot start instance {} because it does "\
+        raise TestCloudCliError("Cannot start instance {} because it does "
                                 "not exist".format(args.name))
 
     tc_instance.start()
+
 
 def _stop_instance(args):
     """Handler for 'instance stop' command. Expects the following elements in args:
@@ -117,10 +119,11 @@ def _stop_instance(args):
     tc_instance = instance.find_instance(args.name)
 
     if tc_instance is None:
-        raise TestCloudCliError("Cannot stop instance {} because it does "\
+        raise TestCloudCliError("Cannot stop instance {} because it does "
                                 "not exist".format(args.name))
 
     tc_instance.stop()
+
 
 def _destroy_instance(args):
     """Handler for 'instance destroy' command. Expects the following elements in args:
@@ -133,7 +136,7 @@ def _destroy_instance(args):
     tc_instance = instance.find_instance(args.name)
 
     if tc_instance is None:
-        raise TestCloudCliError("Cannot remove instance {} because it does "\
+        raise TestCloudCliError("Cannot remove instance {} because it does "
                                 "not exist".format(args.name))
 
     tc_instance.destroy()
@@ -153,6 +156,7 @@ def _list_image(args):
     for img in images:
         print("  {}".format(img))
 
+
 def _destroy_image(args):
     """Handler for 'image destroy' command. Expects the following elements in args:
         * name(str)
@@ -171,11 +175,10 @@ def _destroy_image(args):
 
 
 def get_argparser():
-    parser = argparse.ArgumentParser(description = description)
+    parser = argparse.ArgumentParser(description=description)
     subparsers = parser.add_subparsers(title="Command Types",
                                        description="Types of commands available",
                                        help="<command> help")
-
 
     instarg = subparsers.add_parser("instance", help="help on instance options")
     instarg.add_argument("-c",
@@ -186,66 +189,65 @@ def get_argparser():
                                           description="Commands available for instance operations",
                                           help="<command> help")
 
-    #instance list
+    # instance list
     instarg_list = instarg_subp.add_parser("list", help="list instances")
     instarg_list.set_defaults(func=_list_instance)
     instarg_list.add_argument("--all",
                               help="list all instances, running and stopped",
                               action="store_true")
 
-    #instance start
+    # instance start
     instarg_start = instarg_subp.add_parser("start", help="start instance")
     instarg_start.add_argument("name",
-                         help="name of instance to start")
+                               help="name of instance to start")
     instarg_start.set_defaults(func=_start_instance)
 
-    #instance stop
+    # instance stop
     instarg_stop = instarg_subp.add_parser("stop", help="stop instance")
     instarg_stop.add_argument("name",
-                         help="name of instance to stop")
+                              help="name of instance to stop")
     instarg_stop.set_defaults(func=_stop_instance)
 
-    #instance destroy
+    # instance destroy
     instarg_destroy = instarg_subp.add_parser("destroy", help="destroy instance")
     instarg_destroy.add_argument("name",
-                         help="name of instance to destroy")
+                                 help="name of instance to destroy")
     instarg_destroy.set_defaults(func=_destroy_instance)
 
-    #instance create
+    # instance create
     instarg_create = instarg_subp.add_parser("create", help="create instance")
     instarg_create.set_defaults(func=_create_instance)
     instarg_create.add_argument("name",
-                         help="name of instance to create")
+                                help="name of instance to create")
     instarg_create.add_argument("--ram",
-                        help="Specify the amount of ram for the VM.",
-                        type=int,
-                        default=512)
+                                help="Specify the amount of ram for the VM.",
+                                type=int,
+                                default=512)
     instarg_create.add_argument("--no-graphic",
-                        help="Turn off graphical display.",
-                        action="store_true")
+                                help="Turn off graphical display.",
+                                action="store_true")
     instarg_create.add_argument("--vnc",
-                        help="Turns on vnc at :1 to the instance.",
-                        action="store_true")
+                                help="Turns on vnc at :1 to the instance.",
+                                action="store_true")
     instarg_create.add_argument("--atomic",
-                        help="Use this flag if you're booting an Atomic Host.",
-                        action="store_true")
+                                help="Use this flag if you're booting an Atomic Host.",
+                                action="store_true")
     # this might work better as a second, required positional arg
     instarg_create.add_argument("-u",
-                         "--url",
-                         help="URL to qcow2 image is required.",
-                         type=str)
-
+                                "--url",
+                                help="URL to qcow2 image is required.",
+                                type=str)
 
     imgarg = subparsers.add_parser("image", help="help on image options")
     imgarg_subp = imgarg.add_subparsers(title="subcommands",
                                         description="Types of commands available",
                                         help="<command> help")
 
-    #image list
+    # image list
     imgarg_list = imgarg_subp.add_parser("list", help="list images")
     imgarg_list.set_defaults(func=_list_image)
 
-    #image destroy
+    # image destroy
     imgarg_destroy = imgarg_subp.add_parser("destroy", help="destroy image")
     imgarg_destroy.add_argument("name",
                                 help="name of image to destroy")
@@ -274,8 +276,8 @@ def main():
 
     # for the moment, rebooting existing instances is noworky, so blow up early
     if instance_path is not None:
-        raise NotImplementedError("testCloud does not yet support booting " \
-                                  "existing instances. Please remove {} before"\
+        raise NotImplementedError("testCloud does not yet support booting "
+                                  "existing instances. Please remove {} before"
                                   " continuing".format(instance_path))
 
     else:
@@ -310,8 +312,8 @@ def find_vm_ip(name):
     :rtype: str
     """
 
-    log.info("Don't worry about these 'QEMU Driver' errors. libvirt is whiny " + \
-          "and has no method to shut it up...\n")
+    log.info("Don't worry about these 'QEMU Driver' errors. libvirt is whiny " +
+             "and has no method to shut it up...\n")
 
     for _ in xrange(100):
         vm_xml = util.get_vm_xml(name)
@@ -332,10 +334,11 @@ def find_vm_ip(name):
     for _ in xrange(100):
         vm_ip = util.find_ip_from_mac(vm_mac.attrib['address'])
 
-        if vm_ip: break
+        if vm_ip:
+            break
+
         sleep(.2)
 
-    #print("The IP of your VM is: {}".format(vm_ip))
     return vm_ip
 
 

@@ -13,6 +13,7 @@ CONF_FILE = 'settings.py'
 
 _config = None
 
+
 def get_config():
     '''Retrieve a config instance. If a config instance has already been parsed,
     reuse that parsed instance.
@@ -69,11 +70,12 @@ def _load_config(conf_filename):
     try:
         with open(conf_filename, 'r') as conf_file:
             exec(compile(conf_file.read(), conf_filename, 'exec'),
-                    new_conf.__dict__)
+                 new_conf.__dict__)
     except IOError as e:
         e.strerror = 'Unable to load config file {}'.format(e.strerror)
         raise
     return new_conf
+
 
 class ConfigData(object):
     '''Holds configuration data for TestCloud. Is initialized with default

@@ -13,6 +13,7 @@ REF_CONF_CONTENTS = """DATA_DIR = "{}"
 CACHE_DIR = "{}/cache"
 """.format(REF_DATA_DIR, REF_CACHE_DIR)
 
+
 class TestConfig(object):
     def setup_method(self, method):
         config._config = None
@@ -83,4 +84,3 @@ class TestConfig(object):
         test_config = config.get_config()
 
         assert test_config.DATA_DIR == REF_DATA_DIR
-

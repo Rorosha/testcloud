@@ -12,6 +12,7 @@ import mock
 
 from testCloud import instance, image, config
 
+
 class TestInstance:
 
     def test_expand_qcow(self):
@@ -35,6 +36,7 @@ class TestInstance:
     def test_boot_pristine(self):
         pass
 
+
 class TestFindInstance(object):
 
     def setup_method(self, method):
@@ -52,7 +54,6 @@ class TestFindInstance(object):
 
         assert test_instance is None
 
-
     def test_find_exist_instance(self, monkeypatch):
         ref_name = 'test-123'
         ref_image = image.Image('file:///someimage.qcow2')
@@ -66,4 +67,3 @@ class TestFindInstance(object):
         test_instance = instance.find_instance(ref_name, ref_image)
 
         assert test_instance.path == ref_path
-

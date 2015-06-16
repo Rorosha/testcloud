@@ -11,6 +11,7 @@ import pytest
 from testCloud import image
 from testCloud.exceptions import TestCloudImageError
 
+
 class TestImage:
 
     def test_image_download_path(self):
@@ -27,6 +28,7 @@ class TestImage:
 #
 #    def test_load_pristine(self):
 #        pass
+
 
 class TestImageUriProcess(object):
     """The basic idea of what these tests do is to make sure that uris are

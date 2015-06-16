@@ -14,7 +14,6 @@ import sys
 import subprocess
 import glob
 import logging
-from pprint import pprint
 
 import libvirt
 import shutil
@@ -27,15 +26,15 @@ config_data = config.get_config()
 log = logging.getLogger('testCloud.instance')
 
 # mapping libvirt constants to a known set of strings
-DOMAIN_STATUS_ENUM = { libvirt.VIR_DOMAIN_NOSTATE: 'no state',
-                       libvirt.VIR_DOMAIN_RUNNING: 'running',
-                       libvirt.VIR_DOMAIN_BLOCKED: 'blocked',
-                       libvirt.VIR_DOMAIN_PAUSED:  'paused',
-                       libvirt.VIR_DOMAIN_SHUTDOWN: 'shutdown',
-                       libvirt.VIR_DOMAIN_SHUTOFF: 'shutoff',
-                       libvirt.VIR_DOMAIN_CRASHED: 'crashed',
-                       libvirt.VIR_DOMAIN_PMSUSPENDED: 'suspended'
-                       }
+DOMAIN_STATUS_ENUM = {libvirt.VIR_DOMAIN_NOSTATE: 'no state',
+                      libvirt.VIR_DOMAIN_RUNNING: 'running',
+                      libvirt.VIR_DOMAIN_BLOCKED: 'blocked',
+                      libvirt.VIR_DOMAIN_PAUSED:  'paused',
+                      libvirt.VIR_DOMAIN_SHUTDOWN: 'shutdown',
+                      libvirt.VIR_DOMAIN_SHUTOFF: 'shutoff',
+                      libvirt.VIR_DOMAIN_CRASHED: 'crashed',
+                      libvirt.VIR_DOMAIN_PMSUSPENDED: 'suspended'
+                      }
 
 
 def _list_instances():
@@ -46,6 +45,7 @@ def _list_instances():
 
     instance_dir = '{}/instances'.format(config_data.DATA_DIR)
     return os.listdir(instance_dir)
+
 
 def _list_system_domains(connection):
     """List known domains for a given hypervisor connection.
@@ -66,6 +66,7 @@ def _list_system_domains(connection):
 
     return domains
 
+
 def find_instance(name, image=None):
     """Find an instance using a given name and image, if it exists.
 
@@ -80,6 +81,7 @@ def find_instance(name, image=None):
             return Instance(name, image)
     return None
 
+
 def list_instances(connection='qemu:///system'):
     """List instances known by testCloud and the state of each instance
 
@@ -92,12 +94,13 @@ def list_instances(connection='qemu:///system'):
     instances = {}
     for instance in all_instances:
         if instance not in all_instances:
-            raise TestCloudInstanceError("instance {} exists in instances/ "\
-                                         "but is not a libvirt domain on "\
+            raise TestCloudInstanceError("instance {} exists in instances/ "
+                                         "but is not a libvirt domain on "
                                          "{}".format(instance, connection))
         instances[instance] = system_domains[instance]
 
     return instances
+
 
 class Instance(object):
     """The Instance class handles the creation, location and customization
@@ -167,9 +170,8 @@ class Instance(object):
                 user_file.write(file_data)
             log.debug("Generated user-data for instance {}".format(self.name))
         else:
-            log.debug("user-data file already exists for instance {}. Not"\
-                        " regerating.".format(self.name))
-
+            log.debug("user-data file already exists for instance {}. Not"
+                      " regerating.".format(self.name))
 
     def _create_meta_data(self, hostname, overwrite=False):
         """Save the required hostname data to the 'meta-data' file needed to
@@ -187,8 +189,8 @@ class Instance(object):
 
             log.debug("Generated meta-data for instance {}".format(self.name))
         else:
-            log.debug("meta-data file already exists for instance {}. Not"\
-                        " regerating.".format(self.name))
+            log.debug("meta-data file already exists for instance {}. Not"
+                      " regerating.".format(self.name))
 
     def _generate_seed_image(self):
         """Create a virtual filesystem needed for boot with virt-make-fs on a
@@ -218,9 +220,9 @@ class Instance(object):
         # for now, assuming that it doesn't
 
         if self.image is None:
-            raise TestCloudInstanceError("attempted to access image "\
-                                         "information for instance {} but "\
-                                         "that information was not supplied "\
+            raise TestCloudInstanceError("attempted to access image "
+                                         "information for instance {} but "
+                                         "that information was not supplied "
                                          "at creation time".format(self.name))
 
         log.info("extracting kernel and initrd from {}".format(self.image.local_path))
@@ -236,14 +238,13 @@ class Instance(object):
                              "download?")
             sys.exit(1)
 
-
     def _create_local_disk(self):
         """Create a instance using the backing store provided by Image."""
 
         if self.image is None:
-            raise TestCloudInstanceError("attempted to access image "\
-                                         "information for instance {} but "\
-                                         "that information was not supplied "\
+            raise TestCloudInstanceError("attempted to access image "
+                                         "information for instance {} but "
+                                         "that information was not supplied "
                                          "at creation time".format(self.name))
 
         subprocess.call(['qemu-img',
@@ -254,7 +255,6 @@ class Instance(object):
                          self.image.local_path,
                          self.local_disk
                          ])
-
 
     def spawn_vm(self, expand_disk=False):
         """Boot the cloud image redirecting local port 8888 to 80 on the vm as
@@ -311,8 +311,6 @@ class Instance(object):
 
         return vm
 
-
-
     def exists(self):
         """Check to see if this instance already exists."""
 
@@ -331,11 +329,9 @@ class Instance(object):
         log.info("Resized image for Atomic testing...")
         return
 
-
     def set_seed(self, path):
         """Set the seed image for the instance."""
         self.seed = path
-
 
     def boot(self):
         """Boot an already spawned instance."""
@@ -370,7 +366,6 @@ class Instance(object):
         # stop (destroy) the vm using virsh
         self._run_virsh_command('start')
 
-
     def stop(self):
         """Stop the instance"""
 
@@ -378,7 +373,6 @@ class Instance(object):
 
         # stop (destroy) the vm using virsh
         self._run_virsh_command('destroy')
-
 
     def destroy(self):
         """Destroy an already stopped instance
@@ -407,6 +401,3 @@ class Instance(object):
 
         # remove from disk
         shutil.rmtree(self.path)
-
-
-

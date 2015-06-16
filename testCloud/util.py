@@ -45,6 +45,7 @@ def list_pristine():
     for image in images:
         print('\t- {0}'.format(image.split('/')[-1]))
 
+
 def get_vm_xml(instance_name):
     """Query virsh for the xml of an instance by name."""
 
@@ -52,12 +53,13 @@ def get_vm_xml(instance_name):
     try:
         domain = con.lookupByName(instance_name)
 
-    except libvirt.libvirtError as e:
-       return None
+    except libvirt.libvirtError:
+        return None
 
     result = domain.XMLDesc()
 
     return str(result)
+
 
 def find_mac(xml_string):
     """Pass in a virsh xmldump and return a list of any mac addresses listed.
@@ -69,6 +71,7 @@ def find_mac(xml_string):
     macs = xml_data.findall("./devices/interface/mac")
 
     return macs
+
 
 def find_ip_from_mac(mac):
     """Look through ``arp -an`` output for the IP of the provided MAC address.
