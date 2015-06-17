@@ -5,12 +5,9 @@
 # See the LICENSE file for more details on Licensing
 
 """
-This module contains helper functions for the housekeeping tasks of testCloud.
+This module contains helper functions for testCloud.
 """
 
-import os
-import shutil
-import glob
 import subprocess
 import logging
 
@@ -21,29 +18,6 @@ from . import config
 
 log = logging.getLogger('testCloud.util')
 config_data = config.get_config()
-
-
-def create_dirs():
-    """Create the dirs in the download dir we need to store things."""
-    os.makedirs(config_data.LOCAL_DOWNLOAD_DIR + 'testCloud/meta')
-    if not os.path.exists(config_data.PRISTINE):
-        os.makedirs(config_data.PRISTINE)
-        log.debug("Created image store: {0}".format(config_data.PRISTINE))
-    return "Created tmp directories."
-
-
-def clean_dirs():
-    """Remove dirs after a test run."""
-    if os.path.exists(config_data.LOCAL_DOWNLOAD_DIR + 'testCloud'):
-        shutil.rmtree(config_data.LOCAL_DOWNLOAD_DIR + 'testCloud')
-    return "All cleaned up!"
-
-
-def list_pristine():
-    """List the pristine images currently saved."""
-    images = glob.glob(config_data.PRISTINE + '/*')
-    for image in images:
-        print('\t- {0}'.format(image.split('/')[-1]))
 
 
 def get_vm_xml(instance_name):

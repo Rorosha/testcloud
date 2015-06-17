@@ -5,8 +5,7 @@
 # See the LICENSE file for more details on Licensing
 
 """
-This is a module for downloading fedora cloud images (and probably any other
-qcow2) and then booting them locally with qemu.
+Representation of a cloud image which can be used to boot instances
 """
 
 import sys
@@ -27,6 +26,11 @@ log = logging.getLogger('testCloud.image')
 
 
 def list_images():
+    """List the images currently downloaded and available on the system
+
+    :returns: list of images currently available
+    """
+
     image_dir = '{}/cache'.format(config_data.DATA_DIR)
     images = os.listdir(image_dir)
 
@@ -34,6 +38,13 @@ def list_images():
 
 
 def find_image(name, uri=None):
+    """Find an image matching a given name and optionally, a uri
+
+    :param name: name of the image to look for
+    :param uri: source uri to use if the image is found
+
+    :returns: :py:class:`Image` if an image is found, otherwise None
+    """
     images = list_images()
 
     if name in images:
@@ -178,10 +189,6 @@ class Image(object):
         a remote location or copying it into the image cache from a locally
         mounted filesystem"""
 
-#        # Create the proper local upload directory if it doesn't exist.
-#        if not os.path.exists(config_data.PRISTINE):
-#            os.makedirs(config_data.PRISTINE)
-
         log.debug("Local downloads will be stored in {}.".format(
             config_data.CACHE_DIR))
 
@@ -196,27 +203,10 @@ class Image(object):
         return self.local_path
 
     def destroy(self):
+        """Destroy the image, removing it from disk. This operation cannot be
+        undone.
+        """
+
         log.debug("destroying image {}".format(self.local_path))
 
         os.remove(self.local_path)
-
-#    def save_pristine(self):
-#        """Save a copy of the downloaded image to the config_dataured PRISTINE dir.
-#        Only call this after an image has been downloaded.
-#        """
-#
-#        subprocess.call(['cp',
-#                        self.local_path,
-#                        config_data.PRISTINE])
-#
-#        log.debug('Copied fresh image to {0}...'.format(config_data.PRISTINE))
-#
-#    def load_pristine(self):
-#        """Load a pristine image to /tmp instead of downloading.
-#        """
-#        subprocess.call(['cp',
-#                         config_data.PRISTINE + self.name,
-#                         config_data.LOCAL_DOWNLOAD_DIR])
-#
-#        log.debug('Copied fresh image to {} ...'.format(config_data.LOCAL_DOWNLOAD_DIR))
-#

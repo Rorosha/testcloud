@@ -10,16 +10,11 @@ This is the primary user entry point for testCloud
 
 import argparse
 import logging
-import sys
-from pprint import pprint
+from time import sleep
 
 from . import config
 from . import image
 from . import instance
-
-# these are used in commented out code, may be reactivated
-
-from time import sleep
 from . import util
 from .exceptions import DomainNotFoundError, TestCloudCliError
 
@@ -61,7 +56,6 @@ def _create_instance(args):
     """
 
     log.debug("create instance")
-    pprint(args)
 
     tc_image = image.Image(args.url)
     tc_image.prepare()
@@ -261,47 +255,6 @@ def main():
     args = parser.parse_args()
 
     args.func(args)
-    sys.exit(1)
-
-    # get/find image
-    # look for existing instance
-    # if not exist:
-    #   prepare metadata
-    #   boot vm
-
-    tc_image = image.Image(args.url)
-    tc_image.prepare()
-
-    instance_path = instance.find_instance(args.name, tc_image.name)
-
-    # for the moment, rebooting existing instances is noworky, so blow up early
-    if instance_path is not None:
-        raise NotImplementedError("testCloud does not yet support booting "
-                                  "existing instances. Please remove {} before"
-                                  " continuing".format(instance_path))
-
-    else:
-        tc_instance = instance.Instance(args.name, tc_image)
-
-        # prepare instance
-        tc_instance.prepare()
-
-        # boot instance
-        tc_instance.spawn_vm()
-
-    # look for data about instance (mac, IP, etc.)
-
-#    install(args.url,
-#            args.name,
-#            args.ram,
-#            graphics=args.no_graphic,
-#            vnc=args.vnc,
-#            atomic=args.atomic,
-#            pristine=args.pristine)
-#
-    #  It takes a bit for the instance to get registered in virsh,
-    #  so here we keep asking for the domain we created until virsh
-    #  finally decides to cough up the information.
 
 
 def find_vm_ip(name):

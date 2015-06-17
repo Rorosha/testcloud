@@ -5,8 +5,7 @@
 # See the LICENSE file for more details on Licensing
 
 """
-This is a module for downloading fedora cloud images (and probably any other
-qcow2) and then booting them locally with qemu.
+Representation of a TestCloud spawned (or to-be-spawned) virtual machine
 """
 
 import os
@@ -103,8 +102,9 @@ def list_instances(connection='qemu:///system'):
 
 
 class Instance(object):
-    """The Instance class handles the creation, location and customization
-    of existing testCloud instances (which are qcow2 backed from an Image)"""
+    """Handles creating, starting, stopping and destroying virtual machines
+    defined on the local system, using an existing :py:class:`Image`.
+    """
 
     def __init__(self, name, image=None):
         self.name = name
@@ -127,6 +127,8 @@ class Instance(object):
         self.image_path = config_data.CACHE_DIR + self.name + ".qcow2"
 
     def prepare(self):
+        """Create local directories and metadata needed to spawn the instance
+        """
         # create the dirs needed for this instance
         self._create_dirs()
 
@@ -215,10 +217,6 @@ class Instance(object):
         """Download the necessary kernel and initrd for booting a specified
         cloud image."""
 
-        # still need to figure out if the image needs to be copied from
-        # cache for each instance
-        # for now, assuming that it doesn't
-
         if self.image is None:
             raise TestCloudInstanceError("attempted to access image "
                                          "information for instance {} but "
@@ -256,15 +254,8 @@ class Instance(object):
                          self.local_disk
                          ])
 
-    def spawn_vm(self, expand_disk=False):
-        """Boot the cloud image redirecting local port 8888 to 80 on the vm as
-        well as local port 2222 to 22 on the vm so http and ssh can be
-        accessed.
-
-        Pass True to expand_disk if booting a fresh atomic image or you want to
-        grow the disk size for some other reason at boot.
-
-        """
+    def spawn_vm(self):
+        """Create and boot the instance, using prepared data."""
 
         boot_args = ['/usr/bin/virt-install',
                      '--connect',
@@ -285,19 +276,6 @@ class Instance(object):
         # Extend with the customizations from the config_data file
         boot_args.extend(config_data.CMD_LINE_ARGS)
 
-#        if expand_disk:
-#            self.expand_qcow()
-#
-#        if not self.atomic:
-#            self.download_initrd_and_kernel()
-#
-#            boot_args.extend(['--boot',
-#                              'kernel={0},initrd={1},kernel_args={2}'.format(
-#                                  self.kernel,
-#                                  self.initrd,
-#                                  '"root=/dev/vda1 ro ds=nocloud-net"'),
-#                              ])
-#
         if self.graphics:
             boot_args.extend(['--noautoconsole'])
 
@@ -310,11 +288,6 @@ class Instance(object):
         log.info("PID: %d" % vm.pid)
 
         return vm
-
-    def exists(self):
-        """Check to see if this instance already exists."""
-
-        pass
 
     def expand_qcow(self, size="+10G"):
         """Expand the storage for a qcow image. Currently only used for Atomic
