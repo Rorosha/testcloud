@@ -8,8 +8,8 @@
 
 import pytest
 
-from testCloud import image
-from testCloud.exceptions import TestCloudImageError
+from testcloud import image
+from testcloud.exceptions import TestcloudImageError
 
 
 class TestImage:
@@ -84,11 +84,11 @@ class TestImageUriProcess(object):
         ref_path = '/localhost/images/{}'.format(self.image_name)
         ref_uri = '{}://{}'.format(ref_type, ref_path)
 
-        with pytest.raises(TestCloudImageError):
+        with pytest.raises(TestcloudImageError):
             image.Image(ref_uri)
 
     def test_invalid_uri(self):
         ref_uri = 'leprechaunhandywork'
 
-        with pytest.raises(TestCloudImageError):
+        with pytest.raises(TestcloudImageError):
             image.Image(ref_uri)

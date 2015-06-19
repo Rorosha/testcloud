@@ -1,8 +1,8 @@
 #########
-testCloud
+testcloud
 #########
 
-testCloud is a small helper script to download and boot cloud images locally.
+testcloud is a small helper script to download and boot cloud images locally.
 Currently only Fedora qcow2 images are tested and supported.
 
 Requirements
@@ -23,14 +23,14 @@ well).
 For the moment, the follwing directories need to exist with permissions that
 allow modification by any permitted user::
 
-  /var/lib/testCloud/
-  /var/lib/testCloud/instances
-  /var/lib/testCloud/cache
+  /var/lib/testcloud/
+  /var/lib/testcloud/instances
+  /var/lib/testcloud/cache
 
-This will be automagical in a future version of testCloud and is a side-effect
+This will be automagical in a future version of testcloud and is a side-effect
 of the current refactoring/transition process.
 
-If you are running testCloud as a non-administrative user (ie. not in wheel) or
+If you are running testcloud as a non-administrative user (ie. not in wheel) or
 on a system that doesn't have a polkit agent running (custom setups, headless
 systems etc.), you may need to adjust local polkit configuration to allow non-root
 users to manage VMs with libvirt. Add the following data into ``/etc/polkit-1/localauthority/50-local.d/50-nonrootlivirt.pkla``::
@@ -44,23 +44,42 @@ users to manage VMs with libvirt. Add the following data into ``/etc/polkit-1/lo
 
 After writing that file, restart polkit (``systemctl restart polkit``) and if
 the user in question is a member of the unix group ``testcloud``, that user
-should be able to run testCloud with no additional permissions.
+should be able to run testcloud with no additional permissions.
 
-Usage
------
+Basic Usage
+-----------
 
 The usage varies slightly between using the git checkout and installing the
-module. To run testCloud straight from the git checkout, use
+module. To run testcloud straight from the git checkout, use
 
 .. code:: bash
 
-    python run_testCloud.py <url for qcow2 image>
+    python run_testCloud.py instance create <instance name> -u <url for qcow2 image>
 
 After installing via pip or setup.py, you can run
 
 .. code:: bash
 
-    testCloud <url for qcow2 image>
+    testcloud instance create <instance name> -u <url for qcow2 image>
+
+This will download the qcow2 and store it in /var/tmp/cache/<qcow2 filename>. This
+will be used as a backing store for your instance under /var/tmp/instances/<instance
+name>. These instances will be viewable within virt-manager. To see your running
+instances run:
+
+.. code:: bash
+
+    testcloud instance list
+
+Instances can be stopped, started and destroyed as well through this interface. To
+see a list of options, run:
+
+.. code:: bash
+
+    testcloud instance -h
+
+Options
+-------
 
 There are currently only three options (all optional) you can use when invoking
 this script: '--ram', '--no-graphic' and '--atomic'.
@@ -68,17 +87,14 @@ this script: '--ram', '--no-graphic' and '--atomic'.
 The --ram option takes an int for how much ram you want the guest to have, the
 ``--no-graphic option`` is merely a flag to suppress a GUI from appearing, the
 ``--atomic`` option indicates that you wish to boot an
-`Atomic <http://projectatomic.io>`_ host as well as ``--pristine``, which allows you
-to reuse a previously downloaded image regardless of whether it's been
-configured before (reusing an image without ``--pristine`` still boots as 
-expectedi, retaining any configuration done to it previously).
+`Atomic <http://projectatomic.io>`_ host (currently not tested).
 
 Once the image has booted, you can log in from the GUI or ssh. To log in with 
 ssh, run the following command:
 
 .. code:: bash
 
-    ssh -F ./ssh_config testCloud
+    ssh -F ./ssh_config testcloud
 
 The user is 'fedora' and the password is 'passw0rd'
 
@@ -97,16 +113,26 @@ Note that in order for those new values to be picked up, the filename must be
 ``settings.py`` and that file must live in one of the following locations:
 
 - ``conf/settings.py`` in the git checkout
-- ``~/.config/testCloud/settings.py``
-- ``/etc/testCloud/settings.py``
+- ``~/.config/testcloud/settings.py``
+- ``/etc/testcloud/settings.py``
 
 Testing
 -------
 
-Currently there is no testsuite for this script. If it proves useful to someone
-else, then we can make one. The best means of ensuring the code works and it's
-not your image, is to test against the latest Fedora Cloud release image. Download
-a qcow2 image from `here <http://cloud.fedoraproject.org/>`_.
+There is a small testsuite you can run with:
+
+.. code:: bash
+
+    py.test test/
+
+This is a good place to contribute if you're looking to help out.
+
+Issue Tracking and Roadmap
+--------------------------
+
+Our project tracker is on the Fedora QA-devel 
+`Phabricator<https://phab.qadevel.cloud.fedoraproject.org/tag/testcloud/>`_
+instance.
 
 Credit
 ------

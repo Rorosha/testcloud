@@ -5,7 +5,7 @@
 # See the LICENSE file for more details on Licensing
 
 """
-This is the primary user entry point for testCloud
+This is the primary user entry point for testcloud
 """
 
 import argparse
@@ -16,14 +16,14 @@ from . import config
 from . import image
 from . import instance
 from . import util
-from .exceptions import DomainNotFoundError, TestCloudCliError
+from .exceptions import DomainNotFoundError, TestcloudCliError
 
 config_data = config.get_config()
 
 log = logging.getLogger('libtestcloud')
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
-description = """TestCloud is a small wrapper program designed to quickly and
+description = """Testcloud is a small wrapper program designed to quickly and
 simply boot images designed for cloud systems."""
 
 
@@ -64,7 +64,7 @@ def _create_instance(args):
 
     # can't create existing instances
     if existing_instance is not None:
-        raise TestCloudCliError("A testCloud instance named {} already "
+        raise TestcloudCliError("A testcloud instance named {} already "
                                 "exists at {}. Use 'testcloud instance start "
                                 "{}' to start the instance or remove it before"
                                 " re-creating ".format(args.name,
@@ -96,7 +96,7 @@ def _start_instance(args):
     tc_instance = instance.find_instance(args.name)
 
     if tc_instance is None:
-        raise TestCloudCliError("Cannot start instance {} because it does "
+        raise TestcloudCliError("Cannot start instance {} because it does "
                                 "not exist".format(args.name))
 
     tc_instance.start()
@@ -113,7 +113,7 @@ def _stop_instance(args):
     tc_instance = instance.find_instance(args.name)
 
     if tc_instance is None:
-        raise TestCloudCliError("Cannot stop instance {} because it does "
+        raise TestcloudCliError("Cannot stop instance {} because it does "
                                 "not exist".format(args.name))
 
     tc_instance.stop()
@@ -130,7 +130,7 @@ def _destroy_instance(args):
     tc_instance = instance.find_instance(args.name)
 
     if tc_instance is None:
-        raise TestCloudCliError("Cannot remove instance {} because it does "
+        raise TestcloudCliError("Cannot remove instance {} because it does "
                                 "not exist".format(args.name))
 
     tc_instance.destroy()

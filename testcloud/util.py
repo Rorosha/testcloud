@@ -5,7 +5,7 @@
 # See the LICENSE file for more details on Licensing
 
 """
-This module contains helper functions for testCloud.
+This module contains helper functions for testcloud.
 """
 
 import subprocess
@@ -16,7 +16,7 @@ import xml.etree.ElementTree as ET
 
 from . import config
 
-log = logging.getLogger('testCloud.util')
+log = logging.getLogger('testcloud.util')
 config_data = config.get_config()
 
 

@@ -5,26 +5,26 @@
 # See the LICENSE file for more details on Licensing
 
 """
-Exceptions used with testCloud
+Exceptions used with testcloud
 """
 
 
-class TestCloudException(BaseException):
-    """Common ancestor for all TestCloud exceptions"""
+class TestcloudException(BaseException):
+    """Common ancestor for all Testcloud exceptions"""
     pass
 
 
-class TestCloudCliError(TestCloudException):
-    """Exception for errors having to do with TestCloud CLI processing"""
+class TestcloudCliError(TestcloudException):
+    """Exception for errors having to do with Testcloud CLI processing"""
     pass
 
 
-class TestCloudImageError(TestCloudException):
+class TestcloudImageError(TestcloudException):
     """Exception for errors having to do with images and image fetching"""
     pass
 
 
-class TestCloudInstanceError(TestCloudException):
+class TestcloudInstanceError(TestcloudException):
     """Exception for errors having to do with instances and instance prep"""
     pass
 

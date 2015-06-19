@@ -10,7 +10,7 @@ import os
 
 import mock
 
-from testCloud import instance, image, config
+from testcloud import instance, image, config
 
 
 class TestInstance:

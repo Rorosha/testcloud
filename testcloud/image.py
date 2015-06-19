@@ -18,11 +18,11 @@ import logging
 import requests
 
 from . import config
-from .exceptions import TestCloudImageError
+from .exceptions import TestcloudImageError
 
 config_data = config.get_config()
 
-log = logging.getLogger('testCloud.image')
+log = logging.getLogger('testcloud.image')
 
 
 def list_images():
@@ -62,7 +62,7 @@ class Image(object):
     """
 
     def __init__(self, uri):
-        """Create a new Image object for TestCloud
+        """Create a new Image object for Testcloud
 
         :param uri: URI for the image to be represented. this URI must be of a
             supported type (http, https, file)
@@ -89,13 +89,13 @@ class Image(object):
 
         :param uri: string URI to be processed
         :return: dictionary containing 'type', 'name' and 'path'
-        :raise TestCloudImageError: if the URI is invalid or uses an unsupported transport
+        :raise TestcloudImageError: if the URI is invalid or uses an unsupported transport
         """
 
         type_match = re.search(r'(http|https|file)://([\w\.\-/]+)', uri)
 
         if not type_match:
-            raise TestCloudImageError('invalid uri: only http, https and file uris'
+            raise TestcloudImageError('invalid uri: only http, https and file uris'
                                       ' are supported: {}'.format(uri))
 
         uri_type = type_match.group(1)
@@ -104,7 +104,7 @@ class Image(object):
         name_match = re.findall('([\w\.\-]+)', uri)
 
         if not name_match:
-            raise TestCloudImageError('invalid uri: could not find image name: {}'.format(uri))
+            raise TestcloudImageError('invalid uri: could not find image name: {}'.format(uri))
 
         image_name = name_match[-1]
         return {'type': uri_type, 'name': image_name, 'path': uri_path}

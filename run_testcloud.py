@@ -1,4 +1,4 @@
 #! /usr/bin/python
-from testCloud import cli
+from testcloud import cli
 
 cli.main()

@@ -5,7 +5,7 @@
 # See the LICENSE file for more details on Licensing
 
 """
-Representation of a TestCloud spawned (or to-be-spawned) virtual machine
+Representation of a Testcloud spawned (or to-be-spawned) virtual machine
 """
 
 import os
@@ -18,11 +18,11 @@ import libvirt
 import shutil
 
 from . import config
-from .exceptions import TestCloudInstanceError
+from .exceptions import TestcloudInstanceError
 
 config_data = config.get_config()
 
-log = logging.getLogger('testCloud.instance')
+log = logging.getLogger('testcloud.instance')
 
 # mapping libvirt constants to a known set of strings
 DOMAIN_STATUS_ENUM = {libvirt.VIR_DOMAIN_NOSTATE: 'no state',
@@ -70,7 +70,7 @@ def find_instance(name, image=None):
     """Find an instance using a given name and image, if it exists.
 
     :param name: name of instance to find
-    :param image: :py:class:`testCloud.image.Image`
+    :param image: :py:class:`testcloud.image.Image`
     :returns: :py:class:`Instance` if the instance exists, None if it doesn't
     """
 
@@ -82,7 +82,7 @@ def find_instance(name, image=None):
 
 
 def list_instances(connection='qemu:///system'):
-    """List instances known by testCloud and the state of each instance
+    """List instances known by testcloud and the state of each instance
 
     :param connection: libvirt compatible connection to use when listing domains
     :returns: dictionary of instance_name to domain_state mapping
@@ -93,7 +93,7 @@ def list_instances(connection='qemu:///system'):
     instances = {}
     for instance in all_instances:
         if instance not in all_instances:
-            raise TestCloudInstanceError("instance {} exists in instances/ "
+            raise TestcloudInstanceError("instance {} exists in instances/ "
                                          "but is not a libvirt domain on "
                                          "{}".format(instance, connection))
         instances[instance] = system_domains[instance]
@@ -211,14 +211,14 @@ class Instance(object):
             log.info("Seed image generated successfully")
         else:
             log.error("Seed image generation failed. Exiting")
-            raise TestCloudInstanceError("Failure during seed image generation")
+            raise TestcloudInstanceError("Failure during seed image generation")
 
     def _extract_initrd_and_kernel(self):
         """Download the necessary kernel and initrd for booting a specified
         cloud image."""
 
         if self.image is None:
-            raise TestCloudInstanceError("attempted to access image "
+            raise TestcloudInstanceError("attempted to access image "
                                          "information for instance {} but "
                                          "that information was not supplied "
                                          "at creation time".format(self.name))
@@ -240,7 +240,7 @@ class Instance(object):
         """Create a instance using the backing store provided by Image."""
 
         if self.image is None:
-            raise TestCloudInstanceError("attempted to access image "
+            raise TestcloudInstanceError("attempted to access image "
                                          "information for instance {} but "
                                          "that information was not supplied "
                                          "at creation time".format(self.name))
@@ -350,7 +350,7 @@ class Instance(object):
     def destroy(self):
         """Destroy an already stopped instance
 
-        :raises TestCloudInstanceError: if the image does not exist or is still
+        :raises TestcloudInstanceError: if the image does not exist or is still
                                         running
         """
 
@@ -363,7 +363,7 @@ class Instance(object):
         if self.name in system_domains and \
                 system_domains[self.name] == 'running':
 
-            raise TestCloudInstanceError("Cannot remove running instance {}. "
+            raise TestcloudInstanceError("Cannot remove running instance {}. "
                                          "Please stop the instance before "
                                          "removing.".format(self.name))
 

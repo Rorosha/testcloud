@@ -1,12 +1,12 @@
 import os
 import imp
 
-import testCloud
+import testcloud
 
 
-CONF_DIRS = [os.path.abspath(os.path.dirname(testCloud.__file__)) + '/../conf',
-             '{}/.config/testCloud'.format(os.environ['HOME']),
-             '/etc/testCloud'
+CONF_DIRS = [os.path.abspath(os.path.dirname(testcloud.__file__)) + '/../conf',
+             '{}/.config/testcloud'.format(os.environ['HOME']),
+             '/etc/testcloud'
              ]
 
 CONF_FILE = 'settings.py'
@@ -84,13 +84,10 @@ class ConfigData(object):
 
     DOWNLOAD_PROGRESS = True
 
-    # Directories testCloud cares about
+    # Directories testcloud cares about
 
-    DATA_DIR = "/var/lib/testCloud"
-    CACHE_DIR = "/var/lib/testCloud/cache"
-
-#    PRISTINE = "/home/{}/.local/share/testcloud/images/".format(os.getlogin())
-#    LOCAL_DOWNLOAD_DIR = "/var/tmp/"
+    DATA_DIR = "/var/lib/testcloud"
+    CACHE_DIR = "/var/lib/testcloud/cache"
 
     # Data for cloud-init
 

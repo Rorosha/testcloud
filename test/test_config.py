@@ -4,7 +4,7 @@
 # License: GPL-2.0+ <http://spdx.org/licenses/GPL-2.0+>
 # See the LICENSE file for more details on Licensing
 
-from testCloud import config
+from testcloud import config
 
 
 REF_DATA_DIR = "/some/random/dir/for/testing/"
