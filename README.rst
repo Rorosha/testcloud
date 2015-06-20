@@ -5,6 +5,18 @@ testCloud
 testCloud is a small helper script to download and boot cloud images locally.
 Currently only Fedora qcow2 images are tested and supported.
 
+Depreciation Warning
+====================
+
+This is an old release of testcloud. It only exists here because I know some
+people have used it for projects and they might still need it. Please use the
+master branch going forward. It offers a lot more features and is easier to
+use. You can install it with:
+
+.. code:: bash 
+
+    pip install testcloud
+
 Requirements
 ------------
 
