@@ -131,7 +131,7 @@ Issue Tracking and Roadmap
 --------------------------
 
 Our project tracker is on the Fedora QA-devel 
-`Phabricator<https://phab.qadevel.cloud.fedoraproject.org/tag/testcloud/>`_
+`Phabricator <https://phab.qadevel.cloud.fedoraproject.org/tag/testcloud/>`_
 instance.
 
 Credit
