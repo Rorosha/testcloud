@@ -8,8 +8,8 @@
 #DOWNLOAD_PROGRESS = True
 
 # Directories for data and cached downloaded images
-#DATA_DIR = "/var/lib/testCloud/"
-#CACHE_DIR = "/var/lib/testCloud/cache"
+#DATA_DIR = "/var/lib/testcloud/"
+#CACHE_DIR = "/var/lib/testcloud/cache"
 
 # Data for cloud-init
 
