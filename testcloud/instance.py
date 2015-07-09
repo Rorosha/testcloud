@@ -139,9 +139,6 @@ class Instance(object):
         # generate seed image
         self._generate_seed_image()
 
-        # extract kernel and initrd
-        self._extract_initrd_and_kernel()
-
         # deal with backing store
         self._create_local_disk()
 
