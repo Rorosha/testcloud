@@ -1,5 +1,17 @@
+# compile and editor files
 *.py[co]
 *~
-#*#
 *.swp
+
+# configuration
 conf/settings.py
+
+# building & packages
+/build/
+/dist/
+/*.egg-info
+/*.tar.gz
+/*.rpm
+
+# virtualenv
+/env_*/
