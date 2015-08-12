@@ -82,6 +82,9 @@ def _create_instance(args):
 
         # find vm ip
         vm_ip = find_vm_ip(args.name)
+
+        # Write ip to file
+        tc_instance.create_ip_file(vm_ip)
         print("The IP of vm {}:  {}".format(args.name, vm_ip))
 
 

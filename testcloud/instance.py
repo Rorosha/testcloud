@@ -251,6 +251,15 @@ class Instance(object):
                          self.local_disk
                          ])
 
+    def create_ip_file(self, ip):
+        """Write the ip address found after instance creation to a file
+           for easier management later. This is likely going to break
+           and need a better solution."""
+
+        with open("{}/instances/{}/ip".format(config_data.DATA_DIR,
+                                              self.name), 'w') as ip_file:
+            ip_file.write(ip)
+
     def spawn_vm(self):
         """Create and boot the instance, using prepared data."""
 
