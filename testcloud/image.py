@@ -66,7 +66,7 @@ class Image(object):
 
         :param uri: URI for the image to be represented. this URI must be of a
             supported type (http, https, file)
-        :raises TaskotronImageError: if the URI is not of a supported type or cannot be parsed
+        :raises TestcloudImageError: if the URI is not of a supported type or cannot be parsed
         """
 
         self.uri = uri
