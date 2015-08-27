@@ -175,7 +175,7 @@ def get_argparser():
     parser = argparse.ArgumentParser(description=description)
     subparsers = parser.add_subparsers(title="Command Types",
                                        description="Types of commands available",
-                                       help="<command> help")
+                                       help="<command> --help")
 
     instarg = subparsers.add_parser("instance", help="help on instance options")
     instarg.add_argument("-c",
