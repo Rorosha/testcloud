@@ -290,8 +290,7 @@ class Instance(object):
 
         vm = subprocess.Popen(boot_args)
 
-        log.info("Successfully booted your local cloud image!")
-        log.info("PID: %d" % vm.pid)
+        log.info("Successfully booted your local cloud image! PID: %d" % vm.pid)
 
         return vm
 

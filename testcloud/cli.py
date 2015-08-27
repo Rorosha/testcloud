@@ -20,8 +20,8 @@ from .exceptions import DomainNotFoundError, TestcloudCliError
 
 config_data = config.get_config()
 
-log = logging.getLogger('libtestcloud')
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+log = logging.getLogger('testcloud')
+log.addHandler(logging.NullHandler())  # this is needed when running in library mode
 
 description = """Testcloud is a small wrapper program designed to quickly and
 simply boot images designed for cloud systems."""
@@ -253,9 +253,20 @@ def get_argparser():
     return parser
 
 
+def _configure_logging(level=logging.DEBUG):
+    '''Set up logging framework, when running in main script mode. Should not
+    be called when running in library mode.
+
+    :param int level: the stream log level to be set (one of the constants from logging.*)
+    '''
+    logging.basicConfig(format='%(levelname)s:%(message)s', level=level)
+
+
 def main():
     parser = get_argparser()
     args = parser.parse_args()
+
+    _configure_logging()
 
     args.func(args)
 
