@@ -10,6 +10,7 @@ Requirements
 
 Packages:
  - libvirt
+ - libvirt-python
  - libguestfs
  - libguestfs-tools
  - python-requests (for whatever python version you're running)
@@ -89,7 +90,7 @@ The --ram option takes an int for how much ram you want the guest to have, the
 ``--atomic`` option indicates that you wish to boot an
 `Atomic <http://projectatomic.io>`_ host (currently not tested).
 
-Once the image has booted, you can log in from the GUI or ssh. To log in with 
+Once the image has booted, you can log in from the GUI or ssh. To log in with
 ssh, run the following command:
 
 .. code:: bash
@@ -130,7 +131,7 @@ This is a good place to contribute if you're looking to help out.
 Issue Tracking and Roadmap
 --------------------------
 
-Our project tracker is on the Fedora QA-devel 
+Our project tracker is on the Fedora QA-devel
 `Phabricator <https://phab.qadevel.cloud.fedoraproject.org/tag/testcloud/>`_
 instance.
 
