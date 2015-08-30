@@ -139,9 +139,6 @@ class Instance(object):
         # generate seed image
         self._generate_seed_image()
 
-        # extract kernel and initrd
-        self._extract_initrd_and_kernel()
-
         # deal with backing store
         self._create_local_disk()
 
@@ -254,6 +251,15 @@ class Instance(object):
                          self.local_disk
                          ])
 
+    def create_ip_file(self, ip):
+        """Write the ip address found after instance creation to a file
+           for easier management later. This is likely going to break
+           and need a better solution."""
+
+        with open("{}/instances/{}/ip".format(config_data.DATA_DIR,
+                                              self.name), 'w') as ip_file:
+            ip_file.write(ip)
+
     def spawn_vm(self):
         """Create and boot the instance, using prepared data."""
 
@@ -284,8 +290,7 @@ class Instance(object):
 
         vm = subprocess.Popen(boot_args)
 
-        log.info("Successfully booted your local cloud image!")
-        log.info("PID: %d" % vm.pid)
+        log.info("Successfully booted your local cloud image! PID: %d" % vm.pid)
 
         return vm
 

@@ -1,0 +1,11 @@
+/* testcloud is often used on headless machines (Taskotron uses it this way)
+where the user only has ssh access to the virt host. This rule file allows
+users in the 'testcloud' group to be able to manipulate spawned machines over
+ssh. */
+
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.libvirt.unix.manage" &&
+        subject.isInGroup('testcloud')) {
+	    return polkit.Result.YES;	
+        }
+    });
