@@ -39,11 +39,21 @@ DOMAIN_STATUS_ENUM = {libvirt.VIR_DOMAIN_NOSTATE: 'no state',
 def _list_instances():
     """List existing instances currently known to testcloud
 
-    :returns: list of instance names
+    :returns: dict of instance names and their ip address
     """
 
-    instance_dir = '{}/instances'.format(config_data.DATA_DIR)
-    return os.listdir(instance_dir)
+    instance_list = []
+
+    instance_dir = os.listdir('{}/instances'.format(config_data.DATA_DIR))
+    for dir in instance_dir:
+        instance_details = {}
+        with open("{}/instances/{}/ip".format(config_data.DATA_DIR, dir), 'r') as inst:
+            instance_details['name'] = dir
+            instance_details['ip'] = inst.readline().strip()
+
+            instance_list.append(instance_details)
+
+    return instance_list
 
 
 def _list_system_domains(connection):
@@ -76,7 +86,7 @@ def find_instance(name, image=None):
 
     instances = _list_instances()
     for inst in instances:
-        if name == inst:
+        if inst['name'] == name:
             return Instance(name, image)
     return None
 
@@ -90,13 +100,18 @@ def list_instances(connection='qemu:///system'):
     system_domains = _list_system_domains(connection)
     all_instances = _list_instances()
 
-    instances = {}
+    instances = []
     for instance in all_instances:
-        if instance not in all_instances:
+        if instance['name'] not in system_domains.keys():
             raise TestcloudInstanceError("instance {} exists in instances/ "
                                          "but is not a libvirt domain on "
-                                         "{}".format(instance, connection))
-        instances[instance] = system_domains[instance]
+                                         "{}".format(instance['name'], connection))
+        #instances[instance[0]] = (system_domains[instance[0]], instance[1])
+
+        # Add the state of the instance
+        instance['state'] = system_domains[instance['name']]
+
+        instances.append(instance)
 
     return instances
 

@@ -39,11 +39,14 @@ def _list_instance(args):
     """
     instances = instance.list_instances()
 
-    print("{:<40} {:<10}".format("Name", "State"))
-    print("--------------------------------------------------")
-    for inst in instances.keys():
-        if args.all or instances[inst] == 'running':
-            print("{:<40} {:<10}".format(inst, instances[inst]))
+    #print("{:<40} {:<10}".format("Name", "State"))
+    print("{:<16} {:^30}     {:<10}".format("Name", "IP", "State"))
+    print("-"*60)
+    for inst in instances:
+        if args.all or inst['state'] == 'running':
+            print("{:<27} {:^22}  {:<10}".format(inst['name'],
+                                                 inst['ip'],
+                                                 inst['state']))
 
     print("")
 
