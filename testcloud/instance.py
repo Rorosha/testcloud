@@ -106,7 +106,6 @@ def list_instances(connection='qemu:///system'):
             raise TestcloudInstanceError("instance {} exists in instances/ "
                                          "but is not a libvirt domain on "
                                          "{}".format(instance['name'], connection))
-        #instances[instance[0]] = (system_domains[instance[0]], instance[1])
 
         # Add the state of the instance
         instance['state'] = system_domains[instance['name']]

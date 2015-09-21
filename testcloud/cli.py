@@ -39,7 +39,6 @@ def _list_instance(args):
     """
     instances = instance.list_instances()
 
-    #print("{:<40} {:<10}".format("Name", "State"))
     print("{:<16} {:^30}     {:<10}".format("Name", "IP", "State"))
     print("-"*60)
     for inst in instances:
