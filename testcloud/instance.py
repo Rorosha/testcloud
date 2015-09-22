@@ -47,11 +47,15 @@ def _list_instances():
     instance_dir = os.listdir('{}/instances'.format(config_data.DATA_DIR))
     for dir in instance_dir:
         instance_details = {}
-        with open("{}/instances/{}/ip".format(config_data.DATA_DIR, dir), 'r') as inst:
-            instance_details['name'] = dir
-            instance_details['ip'] = inst.readline().strip()
+        instance_details['name'] = dir
+        try:
+            with open("{}/instances/{}/ip".format(config_data.DATA_DIR, dir), 'r') as inst:
+                instance_details['ip'] = inst.readline().strip()
 
-            instance_list.append(instance_details)
+        except IOError:
+            instance_details['ip'] = None
+
+        instance_list.append(instance_details)
 
     return instance_list
 
