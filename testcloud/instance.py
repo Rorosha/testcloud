@@ -105,16 +105,20 @@ def list_instances(connection='qemu:///system'):
     all_instances = _list_instances()
 
     instances = []
+
     for instance in all_instances:
         if instance['name'] not in system_domains.keys():
-            raise TestcloudInstanceError("instance {} exists in instances/ "
-                                         "but is not a libvirt domain on "
-                                         "{}".format(instance['name'], connection))
+            log.warn('{} is not registered, might want to delete it.'.format(instance['name']))
+            instance['state'] = 'de-sync'
 
-        # Add the state of the instance
-        instance['state'] = system_domains[instance['name']]
+            instances.append(instance)
 
-        instances.append(instance)
+        else:
+
+            # Add the state of the instance
+            instance['state'] = system_domains[instance['name']]
+
+            instances.append(instance)
 
     return instances
 
@@ -332,10 +336,7 @@ class Instance(object):
     def boot(self):
         """Boot an already spawned instance."""
 
-        subprocess.Popen(['virsh',
-                          'start',
-                          self.name
-                          ])
+        self._run_virsh_command('start')
 
     def _destroy_virsh_instance(self):
         """Remove an instance from virsh."""
@@ -357,9 +358,8 @@ class Instance(object):
     def start(self):
         """Start the instance"""
 
-        log.debug("starting instance {} with virsh".format(self.name))
+        log.debug("attempting to start instance {} with virsh".format(self.name))
 
-        # stop (destroy) the vm using virsh
         self._run_virsh_command('start')
 
     def stop(self):

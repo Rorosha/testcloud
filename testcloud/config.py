@@ -83,6 +83,7 @@ class ConfigData(object):
     '''
 
     DOWNLOAD_PROGRESS = True
+    LOG_FILE = None
 
     # Directories testcloud cares about
 

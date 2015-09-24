@@ -20,6 +20,10 @@ from .exceptions import DomainNotFoundError, TestcloudCliError
 
 config_data = config.get_config()
 
+# Only log to a file when specifically configured to
+if config_data.LOG_FILE is not None:
+    logging.basicConfig(filename=config_data.LOG_FILE, level=logging.DEBUG)
+
 log = logging.getLogger('testcloud')
 log.addHandler(logging.NullHandler())  # this is needed when running in library mode
 
