@@ -63,8 +63,8 @@ After installing via pip or setup.py, you can run
 
     testcloud instance create <instance name> -u <url for qcow2 image>
 
-This will download the qcow2 and store it in /var/tmp/cache/<qcow2 filename>. This
-will be used as a backing store for your instance under /var/tmp/instances/<instance
+This will download the qcow2 and store it in /var/lib/testcloud/cache/<qcow2 filename>.
+This will be used as a backing store for your instance under /var/tmp/instances/<instance
 name>. These instances will be viewable within virt-manager. To see your running
 instances run:
 
@@ -82,20 +82,18 @@ see a list of options, run:
 Options
 -------
 
-There are currently only three options (all optional) you can use when invoking
-this script: '--ram', '--no-graphic' and '--atomic'.
+There are currently only two options (all optional) you can use when invoking
+this script: '--ram' and '--no-graphic'.
 
 The --ram option takes an int for how much ram you want the guest to have, the
-``--no-graphic option`` is merely a flag to suppress a GUI from appearing, the
-``--atomic`` option indicates that you wish to boot an
-`Atomic <http://projectatomic.io>`_ host (currently not tested).
+``--no-graphic option`` is merely a flag to suppress a GUI from appearing.
 
 Once the image has booted, you can log in from the GUI or ssh. To log in with
 ssh, run the following command:
 
 .. code:: bash
 
-    ssh -F ./ssh_config testcloud
+    ssh fedora@<ip of instance>
 
 The user is 'fedora' and the password is 'passw0rd'
 

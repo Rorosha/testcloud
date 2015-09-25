@@ -6,6 +6,7 @@
 # is changed to settings.py
 
 #DOWNLOAD_PROGRESS = True
+#LOG_FILE = None
 
 # Directories for data and cached downloaded images
 #DATA_DIR = "/var/lib/testcloud/"
