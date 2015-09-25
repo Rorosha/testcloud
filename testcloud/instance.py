@@ -128,7 +128,7 @@ class Instance(object):
     defined on the local system, using an existing :py:class:`Image`.
     """
 
-    def __init__(self, name, image=None):
+    def __init__(self, name, image=None, hostname=None):
         self.name = name
         self.image = image
         self.path = "{}/instances/{}".format(config_data.DATA_DIR, self.name)
@@ -143,6 +143,7 @@ class Instance(object):
         self.seed = None
         self.kernel = None
         self.initrd = None
+        self.hostname = hostname if hostname else config_data.HOSTNAME
 
         # get rid of
         self.backing_store = image.local_path if image else None
@@ -156,7 +157,7 @@ class Instance(object):
 
         # generate metadata
         self._create_user_data(config_data.PASSWORD)
-        self._create_meta_data(config_data.HOSTNAME)
+        self._create_meta_data(self.hostname)
 
         # generate seed image
         self._generate_seed_image()
