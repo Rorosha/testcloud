@@ -16,8 +16,11 @@ import logging
 
 import libvirt
 import shutil
+import uuid
+import xml.etree.ElementTree as ET
 
 from . import config
+from . import util
 from .exceptions import TestcloudInstanceError
 
 config_data = config.get_config()
@@ -135,6 +138,7 @@ class Instance(object):
         self.seed_path = "{}/{}-seed.img".format(self.path, self.name)
         self.meta_path = "{}/meta".format(self.path)
         self.local_disk = "{}/{}-local.qcow2".format(self.path, self.name)
+        self.xml_path = "{}/{}-domain.xml".format(self.path, self.name)
 
         self.ram = 512
         self.vnc = False
@@ -283,39 +287,55 @@ class Instance(object):
                                               self.name), 'w') as ip_file:
             ip_file.write(ip)
 
+    def write_domain_xml(self):
+        """Load the default xml template, and populate it with the following:
+         - name
+         - uuid
+         - locations of disks
+         - network mac address
+
+         WARNING: This is fragile. It expects *exactly* the xml template
+         testcloud shipped with. In the future, we'll want this to be more
+         extensible, but we're not there yet."""
+
+        with open(config_data.XML_TEMPLATE, 'r') as template:
+            template_xml = ''.join([x for x in template.readlines()])
+
+        root = ET.fromstring(template_xml)
+
+        root.find('./name').text = self.name
+        root.find('./uuid').text = str(uuid.uuid4())
+
+        # Set the disks - Yes this is ugly. These can be hard coded because
+        # we're only using the template we ship. It'll have to be more robust
+        # later.
+        disks = root.findall('./devices/disk')
+        disks[0][1].attrib['file'] = self.local_disk
+        disks[1][1].attrib['file'] = self.seed_path
+
+        # Set a random mac address to avoid collisions
+        net_interface = root.find('./devices/interface')[0]
+        net_interface.attrib['address'] = util.generate_mac_address()
+
+        # Write out the final xml file for the domain
+        with open(self.xml_path, 'w') as dom_template:
+            dom_template.write(ET.tostring(root))
+
+        return
+
     def spawn_vm(self):
         """Create and boot the instance, using prepared data."""
 
-        boot_args = ['/usr/bin/virt-install',
-                     '--connect',
-                     'qemu:///system',
-                     '--import',
-                     '-n',
-                     self.name,
-                     '-r',
-                     str(self.ram),
-                     '--os-type=linux',  # This should be configurable later
-                     '--disk',
-                     '{},device=disk,bus=virtio,format=qcow2'.format(
-                         self.local_disk),
-                     '--disk',
-                     '{},device=disk,bus=virtio'.format(self.seed_path),
-                     ]
+        self.write_domain_xml()
 
-        # Extend with the customizations from the config_data file
-        boot_args.extend(config_data.CMD_LINE_ARGS)
+        with open(self.xml_path, 'r') as xml_file:
+            domain_xml = ''.join([x for x in xml_file.readlines()])
 
-        if self.graphics:
-            boot_args.extend(['--noautoconsole'])
+        conn = libvirt.open('qemu:///system')
+        domain = conn.defineXML(domain_xml)
+        self.boot()
 
-        if self.vnc:
-            boot_args.extend(['-vnc', '0.0.0.0:1'])
-
-        vm = subprocess.Popen(boot_args)
-
-        log.info("Successfully booted your local cloud image! PID: %d" % vm.pid)
-
-        return vm
+        log.info("Successfully booted your local cloud image!")
 
     def expand_qcow(self, size="+10G"):
         """Expand the storage for a qcow image. Currently only used for Atomic

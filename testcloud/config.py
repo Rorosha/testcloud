@@ -90,6 +90,9 @@ class ConfigData(object):
     DATA_DIR = "/var/lib/testcloud"
     CACHE_DIR = "/var/lib/testcloud/cache"
 
+    # libvirt domain XML Template
+    XML_TEMPLATE = "/var/lib/testcloud/domain-template.xml"
+
     # Data for cloud-init
 
     PASSWORD = 'passw0rd'
