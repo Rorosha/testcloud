@@ -278,6 +278,12 @@ class Instance(object):
                          self.local_disk
                          ])
 
+    def _get_domain(self, hypervisor="qemu:///system"):
+        """Create the connection to libvirt to control instance lifecycle.
+        returns: libvirt domain object"""
+        conn = libvirt.open(hypervisor)
+        return conn.lookupByName(self.name)
+
     def create_ip_file(self, ip):
         """Write the ip address found after instance creation to a file
            for easier management later. This is likely going to break
@@ -332,7 +338,7 @@ class Instance(object):
             domain_xml = ''.join([x for x in xml_file.readlines()])
 
         conn = libvirt.open('qemu:///system')
-        domain = conn.defineXML(domain_xml)
+        conn.defineXML(domain_xml)
         self.boot()
 
         log.info("Successfully booted your local cloud image!")
@@ -357,39 +363,22 @@ class Instance(object):
     def boot(self):
         """Boot an already spawned instance."""
 
-        self._run_virsh_command('start')
-
-    def _destroy_virsh_instance(self):
-        """Remove an instance from virsh."""
-
-        for cmd in ['destroy', 'undefine']:
-            subprocess.Popen(['virsh',
-                              cmd,
-                              self.name
-                              ])
-
-    def _run_virsh_command(self, command):
-        subprocess.Popen(['virsh',
-                          '-c',
-                          'qemu:///system',
-                          command,
-                          self.name
-                          ])
+        self._get_domain().create()
 
     def start(self):
         """Start the instance"""
 
-        log.debug("attempting to start instance {} with virsh".format(self.name))
+        log.debug("attempting to start instance {}.".format(self.name))
 
-        self._run_virsh_command('start')
+        self._get_domain().create()
 
     def stop(self):
         """Stop the instance"""
 
-        log.debug("stopping instance {} with virsh".format(self.name))
+        log.debug("stopping instance {}.".format(self.name))
 
         # stop (destroy) the vm using virsh
-        self._run_virsh_command('destroy')
+        self._get_domain().destroy()
 
     def destroy(self):
         """Destroy an already stopped instance
@@ -398,8 +387,7 @@ class Instance(object):
                                         running
         """
 
-        log.debug("removing instance {} from libvirt with "
-                  "virsh".format(self.name))
+        log.debug("removing instance {} from libvirt.".format(self.name))
 
         # this should be changed if/when we start supporting configurable
         # libvirt connections
@@ -411,8 +399,8 @@ class Instance(object):
                                          "Please stop the instance before "
                                          "removing.".format(self.name))
 
-        # remove from virsh, assuming that it's stopped already
-        self._run_virsh_command('undefine')
+        # remove from libvirt, assuming that it's stopped already
+        self._get_domain().undefine()
 
         log.debug("removing instance {} from disk".format(self.path))
 

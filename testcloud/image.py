@@ -120,7 +120,7 @@ class Image(object):
 
         u = requests.get(remote_url, stream=True)
         if u.status_code == 404:
-            raise TestcloudImageError('Image not found at the given URL: {}'.format(uri))
+            raise TestcloudImageError('Image not found at the given URL: {}'.format(self.uri))
 
         try:
             with open(local_path + ".part", 'wb') as f:

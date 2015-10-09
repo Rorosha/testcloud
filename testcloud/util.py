@@ -57,6 +57,7 @@ def find_ip_from_mac(mac):
         if mac in entry:
             return entry.split()[1][1:-1]
 
+
 def generate_mac_address():
     """Create a workable mac address for our instances."""
 
