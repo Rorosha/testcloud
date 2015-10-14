@@ -17,7 +17,6 @@ import logging
 import libvirt
 import shutil
 import uuid
-import xml.etree.ElementTree as ET
 import jinja2
 
 from . import config
