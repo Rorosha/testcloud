@@ -91,7 +91,8 @@ class ConfigData(object):
     CACHE_DIR = "/var/lib/testcloud/cache"
 
     # libvirt domain XML Template
-    XML_TEMPLATE = "/var/lib/testcloud/domain-template.xml"
+    # This lives in the DATA_DIR
+    XML_TEMPLATE = "domain-template.jinja"
 
     # Data for cloud-init
 

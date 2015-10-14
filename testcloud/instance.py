@@ -18,6 +18,7 @@ import libvirt
 import shutil
 import uuid
 import xml.etree.ElementTree as ET
+import jinja2
 
 from . import config
 from . import util
@@ -304,28 +305,22 @@ class Instance(object):
          testcloud shipped with. In the future, we'll want this to be more
          extensible, but we're not there yet."""
 
-        with open(config_data.XML_TEMPLATE, 'r') as template:
-            template_xml = ''.join([x for x in template.readlines()])
+        # Set up the jinja environment
+        jinjaLoader = jinja2.FileSystemLoader(searchpath=config_data.DATA_DIR)
+        jinjaEnv = jinja2.Environment(loader=jinjaLoader)
+        xml_template = jinjaEnv.get_template(config_data.XML_TEMPLATE)
 
-        root = ET.fromstring(template_xml)
-
-        root.find('./name').text = self.name
-        root.find('./uuid').text = str(uuid.uuid4())
-
-        # Set the disks - Yes this is ugly. These can be hard coded because
-        # we're only using the template we ship. It'll have to be more robust
-        # later.
-        disks = root.findall('./devices/disk')
-        disks[0][1].attrib['file'] = self.local_disk
-        disks[1][1].attrib['file'] = self.seed_path
-
-        # Set a random mac address to avoid collisions
-        net_interface = root.find('./devices/interface')[0]
-        net_interface.attrib['address'] = util.generate_mac_address()
+        # Stuff our values in a dict
+        instance_values = {'domain_name': self.name,
+                           'uuid': uuid.uuid4(),
+                           'memory': 524288,  # 512 MiB
+                           'disk': self.local_disk,
+                           'seed': self.seed_path,
+                           'mac_address': util.generate_mac_address()}
 
         # Write out the final xml file for the domain
         with open(self.xml_path, 'w') as dom_template:
-            dom_template.write(ET.tostring(root))
+            dom_template.write(xml_template.render(instance_values))
 
         return
 
