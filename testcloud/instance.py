@@ -299,10 +299,7 @@ class Instance(object):
          - uuid
          - locations of disks
          - network mac address
-
-         WARNING: This is fragile. It expects *exactly* the xml template
-         testcloud shipped with. In the future, we'll want this to be more
-         extensible, but we're not there yet."""
+        """
 
         # Set up the jinja environment
         jinjaLoader = jinja2.FileSystemLoader(searchpath=config_data.DATA_DIR)

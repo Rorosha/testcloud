@@ -285,9 +285,6 @@ def find_vm_ip(name):
     :rtype: str
     """
 
-    log.info("Don't worry about these 'QEMU Driver' errors. libvirt is whiny " +
-             "and has no method to shut it up...\n")
-
     for _ in xrange(100):
         vm_xml = util.get_vm_xml(name)
         if vm_xml is not None:
