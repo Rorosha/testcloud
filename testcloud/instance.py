@@ -383,15 +383,19 @@ class Instance(object):
         # this should be changed if/when we start supporting configurable
         # libvirt connections
         system_domains = _list_system_domains("qemu:///system")
-        if self.name in system_domains and \
-                system_domains[self.name] == 'running':
+
+        # Check that the domain is registered with libvirt
+        domain_exists = self.name in system_domains
+        if domain_exists and system_domains[self.name] == 'running':
 
             raise TestcloudInstanceError("Cannot remove running instance {}. "
                                          "Please stop the instance before "
                                          "removing.".format(self.name))
 
         # remove from libvirt, assuming that it's stopped already
-        self._get_domain().undefine()
+        if domain_exists:
+            self._get_domain().undefine()
+            log.debug("Unregistering domain from libvirt.")
 
         log.debug("removing instance {} from disk".format(self.path))
 
