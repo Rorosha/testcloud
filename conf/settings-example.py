@@ -37,3 +37,8 @@
 # Customize as needed :)
 
 #CMD_LINE_ARGS = []
+
+# The timeout, in seconds, to wait for an instance to boot before
+# failing the boot process. Setting this to 0 disables waiting and
+# returns immediately after starting the boot process.
+#BOOT_TIMEOUT = 30

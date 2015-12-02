@@ -120,6 +120,9 @@ runcmd:
 
     CMD_LINE_ARGS = []
 
+    # timeout, in seconds for instance boot process
+    BOOT_TIMEOUT = 30
+
     def merge_object(self, obj):
         '''Overwrites default values with values from a python object which have
         names containing all upper case letters.

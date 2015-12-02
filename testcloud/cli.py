@@ -83,8 +83,11 @@ def _create_instance(args):
         # prepare instance
         tc_instance.prepare()
 
-        # boot instance
+        # create instance domain
         tc_instance.spawn_vm()
+
+        # start created domain
+        tc_instance.boot(args.timeout)
 
         # find vm ip
         vm_ip = find_vm_ip(args.name)
@@ -108,7 +111,7 @@ def _start_instance(args):
         raise TestcloudCliError("Cannot start instance {} because it does "
                                 "not exist".format(args.name))
 
-    tc_instance.start()
+    tc_instance.start(args.timeout)
 
 
 def _stop_instance(args):
@@ -203,6 +206,12 @@ def get_argparser():
     instarg_start = instarg_subp.add_parser("start", help="start instance")
     instarg_start.add_argument("name",
                                help="name of instance to start")
+    instarg_start.add_argument("--timeout",
+                               help="Time (in seconds) to wait for boot to "
+                               "complete before completion, setting to 0"
+                               " disables all waiting.",
+                               type=int,
+                               default=config_data.BOOT_TIMEOUT)
     instarg_start.set_defaults(func=_start_instance)
 
     # instance stop
@@ -240,6 +249,12 @@ def get_argparser():
                                 "--url",
                                 help="URL to qcow2 image is required.",
                                 type=str)
+    instarg_create.add_argument("--timeout",
+                                help="Time (in seconds) to wait for boot to "
+                                     "complete before completion, setting to 0"
+                                     " disables all waiting.",
+                                type=int,
+                                default=config_data.BOOT_TIMEOUT)
 
     imgarg = subparsers.add_parser("image", help="help on image options")
     imgarg_subp = imgarg.add_subparsers(title="subcommands",
