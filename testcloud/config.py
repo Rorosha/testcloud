@@ -123,6 +123,10 @@ runcmd:
     # timeout, in seconds for instance boot process
     BOOT_TIMEOUT = 30
 
+    # Desired size, in GiB of instance disks. 0 leaves disk capacity
+    # identical to source image
+    DISK_SIZE = 0
+
     def merge_object(self, obj):
         '''Overwrites default values with values from a python object which have
         names containing all upper case letters.

@@ -80,6 +80,9 @@ def _create_instance(args):
     else:
         tc_instance = instance.Instance(args.name, tc_image)
 
+        # set disk size
+        tc_instance.disk_size = args.disksize
+
         # prepare instance
         tc_instance.prepare()
 
@@ -255,6 +258,10 @@ def get_argparser():
                                      " disables all waiting.",
                                 type=int,
                                 default=config_data.BOOT_TIMEOUT)
+    instarg_create.add_argument("--disksize",
+                                help="Desired instance disk size, in GB",
+                                type=int,
+                                default=config_data.DISK_SIZE)
 
     imgarg = subparsers.add_parser("image", help="help on image options")
     imgarg_subp = imgarg.add_subparsers(title="subcommands",

@@ -142,6 +142,8 @@ class Instance(object):
         self.xml_path = "{}/{}-domain.xml".format(self.path, self.name)
 
         self.ram = 512
+        # desired size of disk, in GiB
+        self.disk_size = 0
         self.vnc = False
         self.graphics = False
         self.atomic = False
@@ -270,14 +272,20 @@ class Instance(object):
                                          "that information was not supplied "
                                          "at creation time".format(self.name))
 
-        subprocess.call(['qemu-img',
-                         'create',
-                         '-f',
-                         'qcow2',
-                         '-b',
-                         self.image.local_path,
-                         self.local_disk
-                         ])
+        imgcreate_command = ['qemu-img',
+                             'create',
+                             '-f',
+                             'qcow2',
+                             '-b',
+                             self.image.local_path,
+                             self.local_disk,
+                             ]
+
+        # make sure to expand the resultant disk if the size is set
+        if self.disk_size > 0:
+            imgcreate_command.append("{}G".format(self.disk_size))
+
+        subprocess.call(imgcreate_command)
 
     def _get_domain(self, hypervisor="qemu:///system"):
         """Create the connection to libvirt to control instance lifecycle.

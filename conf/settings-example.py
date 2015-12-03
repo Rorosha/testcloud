@@ -42,3 +42,7 @@
 # failing the boot process. Setting this to 0 disables waiting and
 # returns immediately after starting the boot process.
 #BOOT_TIMEOUT = 30
+
+# Desired size, in GiB of instance disks. 0 leaves disk capacity
+# identical to source image
+#DISK_SIZE = 0
