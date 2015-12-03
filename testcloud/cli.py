@@ -310,7 +310,3 @@ def find_vm_ip(name):
         sleep(.2)
 
     return vm_ip
-
-
-if __name__ == '__main__':
-    main()
