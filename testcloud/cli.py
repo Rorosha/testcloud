@@ -80,6 +80,9 @@ def _create_instance(args):
     else:
         tc_instance = instance.Instance(args.name, tc_image)
 
+        # set ram size
+        tc_instance.ram = args.ram
+
         # set disk size
         tc_instance.disk_size = args.disksize
 
@@ -235,9 +238,9 @@ def get_argparser():
     instarg_create.add_argument("name",
                                 help="name of instance to create")
     instarg_create.add_argument("--ram",
-                                help="Specify the amount of ram for the VM.",
+                                help="Specify the amount of ram in MiB for the VM.",
                                 type=int,
-                                default=512)
+                                default=config_data.RAM)
     instarg_create.add_argument("--no-graphic",
                                 help="Turn off graphical display.",
                                 action="store_true")
