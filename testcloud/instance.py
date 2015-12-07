@@ -141,9 +141,9 @@ class Instance(object):
         self.local_disk = "{}/{}-local.qcow2".format(self.path, self.name)
         self.xml_path = "{}/{}-domain.xml".format(self.path, self.name)
 
-        self.ram = 512
+        self.ram = config_data.RAM
         # desired size of disk, in GiB
-        self.disk_size = 0
+        self.disk_size = config_data.DISK_SIZE
         self.vnc = False
         self.graphics = False
         self.atomic = False
@@ -318,7 +318,7 @@ class Instance(object):
         # Stuff our values in a dict
         instance_values = {'domain_name': self.name,
                            'uuid': uuid.uuid4(),
-                           'memory': 524288,  # 512 MiB
+                           'memory': self.ram * 1024,  # MiB to KiB
                            'disk': self.local_disk,
                            'seed': self.seed_path,
                            'mac_address': util.generate_mac_address()}

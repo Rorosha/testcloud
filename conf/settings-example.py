@@ -43,6 +43,9 @@
 # returns immediately after starting the boot process.
 #BOOT_TIMEOUT = 30
 
+# ram size, in MiB
+#RAM = 512
+
 # Desired size, in GiB of instance disks. 0 leaves disk capacity
 # identical to source image
 #DISK_SIZE = 0
