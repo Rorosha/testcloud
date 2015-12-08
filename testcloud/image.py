@@ -31,7 +31,7 @@ def list_images():
     :returns: list of images currently available
     """
 
-    image_dir = '{}/cache'.format(config_data.DATA_DIR)
+    image_dir = '{}/{}'.format(config_data.STORE_DIR)
     images = os.listdir(image_dir)
 
     return images
@@ -49,7 +49,7 @@ def find_image(name, uri=None):
 
     if name in images:
         if uri is None:
-            uri = 'file://{}/cache/{}'.format(config_data.DATA_DIR, name)
+            uri = 'file://{}/{}'.format(config_data.STORE_DIR, name)
         return Image(uri)
     else:
         return None
@@ -81,7 +81,7 @@ class Image(object):
         else:
             self.remote_path = uri
 
-        self.local_path = "{}/{}".format(config_data.CACHE_DIR, self.name)
+        self.local_path = "{}/{}".format(config_data.STORE_DIR, self.name)
 
     def _process_uri(self, uri):
         """Process the URI given to find the type, path and imagename contained
@@ -188,11 +188,11 @@ class Image(object):
 
     def prepare(self):
         """Prepare the image for local use by either downloading the image from
-        a remote location or copying it into the image cache from a locally
+        a remote location or copying it into the image store from a locally
         mounted filesystem"""
 
         log.debug("Local downloads will be stored in {}.".format(
-            config_data.CACHE_DIR))
+            config_data.STORE_DIR))
 
         if self.uri_type == 'file':
             self._handle_file_url(self.remote_path, self.local_path)

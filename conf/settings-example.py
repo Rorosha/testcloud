@@ -10,7 +10,7 @@
 
 # Directories for data and cached downloaded images
 #DATA_DIR = "/var/lib/testcloud/"
-#CACHE_DIR = "/var/lib/testcloud/cache"
+#STORE_DIR = "/var/lib/testcloud/backingstores"
 
 # Data for cloud-init
 

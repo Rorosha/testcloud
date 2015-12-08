@@ -39,7 +39,7 @@ Image Commands
   List all of the images currently cached by testCloud
 
 ``testcloud image destroy <image name>``
-  Remove the image named ``<image name>`` from the local image cache. Make sure
+  Remove the image named ``<image name>`` from the local image backing store. Make sure
   to replace ``<image name>`` with the name of an image which is currently
   cached.
 

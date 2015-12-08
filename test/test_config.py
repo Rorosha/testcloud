@@ -8,10 +8,10 @@ from testcloud import config
 
 
 REF_DATA_DIR = "/some/random/dir/for/testing/"
-REF_CACHE_DIR = "/some/random/dir/for/testing/cache/"
+REF_STORE_DIR = "/some/random/dir/for/testing/backingstore/"
 REF_CONF_CONTENTS = """DATA_DIR = "{}"
-CACHE_DIR = "{}/cache"
-""".format(REF_DATA_DIR, REF_CACHE_DIR)
+STORE_DIR = "{}/backingstores"
+""".format(REF_DATA_DIR, REF_STORE_DIR)
 
 
 class TestConfig(object):
