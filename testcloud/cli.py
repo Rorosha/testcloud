@@ -93,7 +93,7 @@ def _create_instance(args):
         tc_instance.spawn_vm()
 
         # start created domain
-        tc_instance.boot(args.timeout)
+        tc_instance.start(args.timeout)
 
         # find vm ip
         vm_ip = find_vm_ip(args.name)

@@ -31,7 +31,7 @@ def list_images():
     :returns: list of images currently available
     """
 
-    image_dir = '{}/{}'.format(config_data.STORE_DIR)
+    image_dir = config_data.STORE_DIR
     images = os.listdir(image_dir)
 
     return images
