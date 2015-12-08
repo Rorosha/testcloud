@@ -147,7 +147,7 @@ class Instance(object):
 
         # get rid of
         self.backing_store = image.local_path if image else None
-        self.image_path = config_data.CACHE_DIR + self.name + ".qcow2"
+        self.image_path = config_data.STORE_DIR + self.name + ".qcow2"
 
     def prepare(self):
         """Create local directories and metadata needed to spawn the instance

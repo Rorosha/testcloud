@@ -58,7 +58,7 @@ metadata.
 ``/var/lib/testCloud/``
   testCloud stores its data in here
 
-``/var/lib/testCloud/cache``
+``/var/lib/testCloud/backingstores``
   default location for cached images
 
 ``/var/lib/testCloud/instances``
@@ -95,7 +95,7 @@ Booting Instances
 
 The creation process for a testCloud instance roughly follows this process:
 
- * download the referenced image, if it doesn't already exist in cache
+ * download the referenced image, if it doesn't already exist in the backingstores
 
  * create an instance directory for the new instance, if an instance with the
    same name already exists, quit with an error

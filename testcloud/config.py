@@ -88,7 +88,7 @@ class ConfigData(object):
     # Directories testcloud cares about
 
     DATA_DIR = "/var/lib/testcloud"
-    CACHE_DIR = "/var/lib/testcloud/cache"
+    STORE_DIR = "/var/lib/testcloud/backingstores"
 
     # Data for cloud-init
 
