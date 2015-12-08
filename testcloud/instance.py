@@ -13,6 +13,7 @@ import sys
 import subprocess
 import glob
 import logging
+import time
 
 import libvirt
 import shutil
@@ -140,7 +141,9 @@ class Instance(object):
         self.local_disk = "{}/{}-local.qcow2".format(self.path, self.name)
         self.xml_path = "{}/{}-domain.xml".format(self.path, self.name)
 
-        self.ram = 512
+        self.ram = config_data.RAM
+        # desired size of disk, in GiB
+        self.disk_size = config_data.DISK_SIZE
         self.vnc = False
         self.graphics = False
         self.atomic = False
@@ -151,7 +154,7 @@ class Instance(object):
 
         # get rid of
         self.backing_store = image.local_path if image else None
-        self.image_path = config_data.CACHE_DIR + self.name + ".qcow2"
+        self.image_path = config_data.STORE_DIR + self.name + ".qcow2"
 
     def prepare(self):
         """Create local directories and metadata needed to spawn the instance
@@ -269,14 +272,20 @@ class Instance(object):
                                          "that information was not supplied "
                                          "at creation time".format(self.name))
 
-        subprocess.call(['qemu-img',
-                         'create',
-                         '-f',
-                         'qcow2',
-                         '-b',
-                         self.image.local_path,
-                         self.local_disk
-                         ])
+        imgcreate_command = ['qemu-img',
+                             'create',
+                             '-f',
+                             'qcow2',
+                             '-b',
+                             self.image.local_path,
+                             self.local_disk,
+                             ]
+
+        # make sure to expand the resultant disk if the size is set
+        if self.disk_size > 0:
+            imgcreate_command.append("{}G".format(self.disk_size))
+
+        subprocess.call(imgcreate_command)
 
     def _get_domain(self, hypervisor="qemu:///system"):
         """Create the connection to libvirt to control instance lifecycle.
@@ -309,7 +318,7 @@ class Instance(object):
         # Stuff our values in a dict
         instance_values = {'domain_name': self.name,
                            'uuid': uuid.uuid4(),
-                           'memory': 524288,  # 512 MiB
+                           'memory': self.ram * 1024,  # MiB to KiB
                            'disk': self.local_disk,
                            'seed': self.seed_path,
                            'mac_address': util.generate_mac_address()}
@@ -330,9 +339,6 @@ class Instance(object):
 
         conn = libvirt.open('qemu:///system')
         conn.defineXML(domain_xml)
-        self.boot()
-
-        log.info("Successfully booted your local cloud image!")
 
     def expand_qcow(self, size="+10G"):
         """Expand the storage for a qcow image. Currently only used for Atomic
@@ -351,17 +357,59 @@ class Instance(object):
         """Set the seed image for the instance."""
         self.seed = path
 
-    def boot(self):
-        """Boot an already spawned instance."""
+    def boot(self, timeout=config_data.BOOT_TIMEOUT):
+        """Deprecated alias for :py:meth:`start`"""
 
-        self._get_domain().create()
+        log.warn("instance.boot has been depricated and will be removed in a "
+                 "future release, use instance.start instead")
 
-    def start(self):
-        """Start the instance"""
+        self.start(timeout)
 
-        log.debug("attempting to start instance {}.".format(self.name))
+    def start(self, timeout=config_data.BOOT_TIMEOUT):
+        """Start an existing instance and wait up to :py:attr:`timeout` seconds
+        for a network interface to appear.
 
-        self._get_domain().create()
+        :param int timeout: number of seconds to wait before timing out.
+                            Setting this to 0 will disable timeout, default
+                            is configured with :py:const:`BOOT_TIMEOUT` config
+                            value.
+        :raises TestcloudInstanceError: if there is an error while creating the
+                                        instance or if the timeout is reached
+                                        while looking for a network interface
+        """
+
+        log.debug("Creating domain {}".format(self.name))
+        dom = self._get_domain()
+        create_status = dom.create()
+
+        # libvirt doesn't directly raise errors on boot failure, check the
+        # return code to verify that the boot process was successful from
+        # libvirt's POV
+        if create_status != 0:
+            raise TestcloudInstanceError("Instance {} did not start "
+                                         "successfully, see libvirt logs for "
+                                         "details".format(self.name))
+        log.debug("Polling domain for active network interface")
+
+        poll_tick = 0.5
+        timeout_ticks = timeout / poll_tick
+        count = 0
+
+        # poll libvirt for domain interfaces, returning when an interface is
+        # found, indicating that the boot process is post-cloud-init
+        while count <= timeout_ticks:
+            domif = dom.interfaceAddresses(0)
+
+            if len(domif) > 0 or timeout_ticks == 0:
+                log.info("Successfully booted instance {}".format(self.name))
+                return
+
+            count += 1
+            time.sleep(poll_tick)
+
+        # If we get here, the boot process has timed out
+        raise TestcloudInstanceError("Instance {} has failed to boot in {} "
+                                     "seconds".format(self.name, timeout))
 
     def stop(self):
         """Stop the instance"""

@@ -26,7 +26,7 @@ allow modification by any permitted user::
 
   /var/lib/testcloud/
   /var/lib/testcloud/instances
-  /var/lib/testcloud/cache
+  /var/lib/testcloud/backingstores
 
 This will be automagical in a future version of testcloud and is a side-effect
 of the current refactoring/transition process.
@@ -63,7 +63,7 @@ After installing via pip or setup.py, you can run
 
     testcloud instance create <instance name> -u <url for qcow2 image>
 
-This will download the qcow2 and store it in /var/lib/testcloud/cache/<qcow2 filename>.
+This will download the qcow2 and store it in /var/lib/testcloud/backingstores/<qcow2 filename>.
 This will be used as a backing store for your instance under /var/tmp/instances/<instance
 name>. These instances will be viewable within virt-manager. To see your running
 instances run:

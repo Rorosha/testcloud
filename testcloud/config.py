@@ -88,7 +88,7 @@ class ConfigData(object):
     # Directories testcloud cares about
 
     DATA_DIR = "/var/lib/testcloud"
-    CACHE_DIR = "/var/lib/testcloud/cache"
+    STORE_DIR = "/var/lib/testcloud/backingstores"
 
     # libvirt domain XML Template
     # This lives in the DATA_DIR
@@ -119,6 +119,16 @@ runcmd:
     # Customize as needed :)
 
     CMD_LINE_ARGS = []
+
+    # timeout, in seconds for instance boot process
+    BOOT_TIMEOUT = 30
+
+    # ram size, in MiB
+    RAM = 512
+
+    # Desired size, in GiB of instance disks. 0 leaves disk capacity
+    # identical to source image
+    DISK_SIZE = 0
 
     def merge_object(self, obj):
         '''Overwrites default values with values from a python object which have
