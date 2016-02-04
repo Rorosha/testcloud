@@ -3,30 +3,30 @@
    http://creativecommons.org/licenses/by/4.0/.
 
 ================
-testCloud API
+testcloud API
 ================
 
 
 instance
 ========
 
-.. automodule:: testCloud.instance
+.. automodule:: testcloud.instance
    :members:
 
 image
 =====
 
-.. automodule:: testCloud.image
+.. automodule:: testcloud.image
    :members:
 
 util
 ====
 
-.. automodule:: testCloud.util
+.. automodule:: testcloud.util
    :members:
 
 cli
 ====
 
-.. automodule:: testCloud.cli
+.. automodule:: testcloud.cli
    :members:
