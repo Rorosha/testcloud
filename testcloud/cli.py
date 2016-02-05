@@ -16,7 +16,7 @@ from . import config
 from . import image
 from . import instance
 from . import util
-from .exceptions import DomainNotFoundError, TestcloudCliError
+from .exceptions import DomainNotFoundError, TestcloudCliError, TestcloudInstanceError
 
 config_data = config.get_config()
 
@@ -333,5 +333,7 @@ def find_vm_ip(name):
             break
 
         sleep(.2)
+    else:
+        raise TestcloudInstanceError('Could not find VM\'s ip before timeout')
 
     return vm_ip
