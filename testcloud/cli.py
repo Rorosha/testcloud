@@ -151,6 +151,9 @@ def _destroy_instance(args):
         raise TestcloudCliError("Cannot remove instance {} because it does "
                                 "not exist".format(args.name))
 
+    if args.force:
+        tc_instance.stop()
+
     tc_instance.destroy()
 
 
@@ -230,6 +233,10 @@ def get_argparser():
     instarg_destroy = instarg_subp.add_parser("destroy", help="destroy instance")
     instarg_destroy.add_argument("name",
                                  help="name of instance to destroy")
+    instarg_destroy.add_argument("-f",
+                                 "--force",
+                                 help="Stop the instance if it's running",
+                                 action="store_true")
     instarg_destroy.set_defaults(func=_destroy_instance)
 
     # instance create
