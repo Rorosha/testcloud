@@ -128,7 +128,7 @@ def list_instances(connection='qemu:///system'):
 
 
 class Instance(object):
-    """Handles creating, starting, stopping and destroying virtual machines
+    """Handles creating, starting, stopping and removing virtual machines
     defined on the local system, using an existing :py:class:`Image`.
     """
 
@@ -419,8 +419,8 @@ class Instance(object):
         # stop (destroy) the vm using virsh
         self._get_domain().destroy()
 
-    def destroy(self):
-        """Destroy an already stopped instance
+    def remove(self):
+        """Remove an already stopped instance
 
         :raises TestcloudInstanceError: if the image does not exist or is still
                                         running

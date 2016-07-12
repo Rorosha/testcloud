@@ -140,13 +140,13 @@ def _stop_instance(args):
     tc_instance.stop()
 
 
-def _destroy_instance(args):
-    """Handler for 'instance destroy' command. Expects the following elements in args:
+def _remove_instance(args):
+    """Handler for 'instance remove' command. Expects the following elements in args:
         * name(str)
 
     :param args: args from argparser
     """
-    log.debug("destroy instance: {}".format(args.name))
+    log.debug("remove instance: {}".format(args.name))
 
     tc_instance = instance.find_instance(args.name)
 
@@ -157,7 +157,7 @@ def _destroy_instance(args):
     if args.force:
         tc_instance.stop()
 
-    tc_instance.destroy()
+    tc_instance.remove()
 
 
 def _reboot_instance(args):
@@ -241,15 +241,15 @@ def get_argparser():
     instarg_stop.add_argument("name",
                               help="name of instance to stop")
     instarg_stop.set_defaults(func=_stop_instance)
-    # instance destroy
-    instarg_destroy = instarg_subp.add_parser("destroy", help="destroy instance")
-    instarg_destroy.add_argument("name",
-                                 help="name of instance to destroy")
-    instarg_destroy.add_argument("-f",
-                                 "--force",
-                                 help="Stop the instance if it's running",
-                                 action="store_true")
-    instarg_destroy.set_defaults(func=_destroy_instance)
+    # instance remove
+    instarg_remove = instarg_subp.add_parser("remove", help="remove instance")
+    instarg_remove.add_argument("name",
+                                help="name of instance to remove")
+    instarg_remove.add_argument("-f",
+                                "--force",
+                                help="Stop the instance if it's running",
+                                action="store_true")
+    instarg_remove.set_defaults(func=_remove_instance)
     # instance reboot
     instarg_reboot = instarg_subp.add_parser("reboot", help="reboot instance")
     instarg_reboot.add_argument("name",
