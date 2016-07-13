@@ -154,10 +154,7 @@ def _remove_instance(args):
         raise TestcloudCliError("Cannot remove instance {} because it does "
                                 "not exist".format(args.name))
 
-    if args.force:
-        tc_instance.stop()
-
-    tc_instance.remove()
+    tc_instance.remove(autostop=args.force)
 
 
 def _reboot_instance(args):
