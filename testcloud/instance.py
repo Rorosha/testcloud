@@ -468,3 +468,9 @@ class Instance(object):
 
         # remove from disk
         shutil.rmtree(self.path)
+
+    def destroy(self):
+        '''A deprecated method. Please call :meth:`remove` instead.'''
+
+        log.debug('DEPRECATED: destroy() method was deprecated. Please use remove()')
+        self.remove()

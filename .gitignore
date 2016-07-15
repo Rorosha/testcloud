@@ -12,6 +12,7 @@ conf/settings.py
 /*.egg-info
 /*.tar.gz
 /*.rpm
+/docs/build/
 
 # virtualenv
 /env_*/

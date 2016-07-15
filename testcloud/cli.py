@@ -182,21 +182,21 @@ def _list_image(args):
         print("  {}".format(img))
 
 
-def _destroy_image(args):
-    """Handler for 'image destroy' command. Expects the following elements in args:
+def _remove_image(args):
+    """Handler for 'image remove' command. Expects the following elements in args:
         * name(str)
 
     :param args: args from argparser
     """
 
-    log.debug("destroying image {}".format(args.name))
+    log.debug("removing image {}".format(args.name))
 
     tc_image = image.find_image(args.name)
 
     if tc_image is None:
-        log.error("image {} not found, cannot destroy".format(args.name))
+        log.error("image {} not found, cannot remove".format(args.name))
 
-    tc_image.destroy()
+    tc_image.remove()
 
 
 def get_argparser():
@@ -247,6 +247,15 @@ def get_argparser():
                                 help="Stop the instance if it's running",
                                 action="store_true")
     instarg_remove.set_defaults(func=_remove_instance)
+
+    instarg_destroy = instarg_subp.add_parser("destroy", help="deprecated alias for remove")
+    instarg_destroy.add_argument("name",
+                                 help="name of instance to remove")
+    instarg_destroy.add_argument("-f",
+                                 "--force",
+                                 help="Stop the instance if it's running",
+                                 action="store_true")
+    instarg_destroy.set_defaults(func=_remove_instance)
     # instance reboot
     instarg_reboot = instarg_subp.add_parser("reboot", help="reboot instance")
     instarg_reboot.add_argument("name",
@@ -301,11 +310,16 @@ def get_argparser():
     imgarg_list = imgarg_subp.add_parser("list", help="list images")
     imgarg_list.set_defaults(func=_list_image)
 
-    # image destroy
-    imgarg_destroy = imgarg_subp.add_parser("destroy", help="destroy image")
+    # image remove
+    imgarg_remove = imgarg_subp.add_parser('remove', help="remove image")
+    imgarg_remove.add_argument("name",
+                               help="name of image to remove")
+    imgarg_remove.set_defaults(func=_remove_image)
+
+    imgarg_destroy = imgarg_subp.add_parser('destroy', help="deprecated alias for remove")
     imgarg_destroy.add_argument("name",
-                                help="name of image to destroy")
-    imgarg_destroy.set_defaults(func=_destroy_image)
+                                help="name of image to remove")
+    imgarg_destroy.set_defaults(func=_remove_image)
 
     return parser
 

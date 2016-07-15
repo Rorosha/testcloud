@@ -72,7 +72,7 @@ instances run:
 
     testcloud instance list
 
-Instances can be stopped, started and destroyed as well through this interface. To
+Instances can be stopped, started and removed as well through this interface. To
 see a list of options, run:
 
 .. code:: bash

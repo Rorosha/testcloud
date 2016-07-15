@@ -36,7 +36,7 @@ Image Commands
 ``testcloud image list``
   List all of the images currently cached by testcloud
 
-``testcloud image destroy <image name>``
+``testcloud image remove <image name>``
   Remove the image named ``<image name>`` from the local image backing store. Make sure
   to replace ``<image name>`` with the name of an image which is currently
   cached.
@@ -63,8 +63,8 @@ Instance Commands
 ``testcloud instance start <instance name>``
   Start the instance with name ``<instance name>``
 
-``testcloud instance destroy <instance name>``
-  Destroy the instance with name ``<instance name>``. This command will fail if
+``testcloud instance remove <instance name>``
+  Remove the instance with name ``<instance name>``. This command will fail if
   the instance is not currently stopped
 
 

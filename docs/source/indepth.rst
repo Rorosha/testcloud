@@ -35,7 +35,7 @@ testcloud Instance
 
 A reasonable description of a testcloud instance is that it is a cloud image
 backed virtual machine. This virtual machine can be created, stopped, started
-or destroyed using the CLI interface from testcloud.
+or removed using the CLI interface from testcloud.
 
 testcloud instances make heavy use of `libvirt <http://libvirt.org/>`_ and
 virt-install, part of the `virt-manager <http://virt-manager.org/>`_ application.
