@@ -204,11 +204,15 @@ class Image(object):
 
         return self.local_path
 
-    def destroy(self):
-        """Destroy the image, removing it from disk. This operation cannot be
-        undone.
+    def remove(self):
+        """Remove the image from disk. This operation cannot be undone.
         """
 
-        log.debug("destroying image {}".format(self.local_path))
-
+        log.debug("removing image {}".format(self.local_path))
         os.remove(self.local_path)
+
+    def destroy(self):
+        '''A deprecated method. Please call :meth:`remove` instead.'''
+
+        log.debug('DEPRECATED: destroy() method was deprecated. Please use remove()')
+        self.remove()

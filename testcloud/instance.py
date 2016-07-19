@@ -128,7 +128,7 @@ def list_instances(connection='qemu:///system'):
 
 
 class Instance(object):
-    """Handles creating, starting, stopping and destroying virtual machines
+    """Handles creating, starting, stopping and removing virtual machines
     defined on the local system, using an existing :py:class:`Image`.
     """
 
@@ -412,18 +412,34 @@ class Instance(object):
                                      "seconds".format(self.name, timeout))
 
     def stop(self):
-        """Stop the instance"""
+        """Stop the instance
+
+        :raises TestcloudInstanceError: if the instance does not exist
+        """
 
         log.debug("stopping instance {}.".format(self.name))
 
-        # stop (destroy) the vm using virsh
+        system_domains = _list_system_domains("qemu:///system")
+        domain_exists = self.name in system_domains
+
+        if not domain_exists:
+            raise TestcloudInstanceError(
+                    "Instance doesn't exist: {}".format(self.name))
+
+        if system_domains[self.name] == 'shutoff':
+            log.debug('Instance already shut off, not stopping: {}'.format(
+                self.name))
+            return
+
+        # stop (destroy) the vm
         self._get_domain().destroy()
 
-    def destroy(self):
-        """Destroy an already stopped instance
+    def remove(self, autostop=True):
+        """Remove an already stopped instance
 
-        :raises TestcloudInstanceError: if the image does not exist or is still
-                                        running
+        :param bool autostop: if the instance is running, stop it first
+        :raises TestcloudInstanceError: if the instance does not exist, or is still
+                                        running and ``autostop==False``
         """
 
         log.debug("removing instance {} from libvirt.".format(self.name))
@@ -436,9 +452,12 @@ class Instance(object):
         domain_exists = self.name in system_domains
         if domain_exists and system_domains[self.name] == 'running':
 
-            raise TestcloudInstanceError("Cannot remove running instance {}. "
-                                         "Please stop the instance before "
-                                         "removing.".format(self.name))
+            if autostop:
+                self.stop()
+            else:
+                raise TestcloudInstanceError(
+                    "Cannot remove running instance {}. Please stop the "
+                    "instance before removing.".format(self.name))
 
         # remove from libvirt, assuming that it's stopped already
         if domain_exists:
@@ -449,3 +468,9 @@ class Instance(object):
 
         # remove from disk
         shutil.rmtree(self.path)
+
+    def destroy(self):
+        '''A deprecated method. Please call :meth:`remove` instead.'''
+
+        log.debug('DEPRECATED: destroy() method was deprecated. Please use remove()')
+        self.remove()

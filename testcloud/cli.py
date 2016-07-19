@@ -11,7 +11,7 @@ This is the primary user entry point for testcloud
 import argparse
 import logging
 from time import sleep
-
+import os
 from . import config
 from . import image
 from . import instance
@@ -118,6 +118,9 @@ def _start_instance(args):
                                 "not exist".format(args.name))
 
     tc_instance.start(args.timeout)
+    with open(os.path.join(config_data.DATA_DIR, 'instances', args.name, 'ip'), 'r') as ip_file:
+        vm_ip = ip_file.read()
+        print("The IP of vm {}:  {}".format(args.name, vm_ip))
 
 
 def _stop_instance(args):
@@ -137,13 +140,13 @@ def _stop_instance(args):
     tc_instance.stop()
 
 
-def _destroy_instance(args):
-    """Handler for 'instance destroy' command. Expects the following elements in args:
+def _remove_instance(args):
+    """Handler for 'instance remove' command. Expects the following elements in args:
         * name(str)
 
     :param args: args from argparser
     """
-    log.debug("destroy instance: {}".format(args.name))
+    log.debug("remove instance: {}".format(args.name))
 
     tc_instance = instance.find_instance(args.name)
 
@@ -151,7 +154,17 @@ def _destroy_instance(args):
         raise TestcloudCliError("Cannot remove instance {} because it does "
                                 "not exist".format(args.name))
 
-    tc_instance.destroy()
+    tc_instance.remove(autostop=args.force)
+
+
+def _reboot_instance(args):
+    """Handler for 'instance reboot' command. Expects the following elements in args:
+        * name(str)
+
+    :param args: args from argparser
+    """
+    _stop_instance(args)
+    _start_instance(args)
 
 
 ################################################################################
@@ -169,21 +182,21 @@ def _list_image(args):
         print("  {}".format(img))
 
 
-def _destroy_image(args):
-    """Handler for 'image destroy' command. Expects the following elements in args:
+def _remove_image(args):
+    """Handler for 'image remove' command. Expects the following elements in args:
         * name(str)
 
     :param args: args from argparser
     """
 
-    log.debug("destroying image {}".format(args.name))
+    log.debug("removing image {}".format(args.name))
 
     tc_image = image.find_image(args.name)
 
     if tc_image is None:
-        log.error("image {} not found, cannot destroy".format(args.name))
+        log.error("image {} not found, cannot remove".format(args.name))
 
-    tc_image.destroy()
+    tc_image.remove()
 
 
 def get_argparser():
@@ -225,13 +238,35 @@ def get_argparser():
     instarg_stop.add_argument("name",
                               help="name of instance to stop")
     instarg_stop.set_defaults(func=_stop_instance)
+    # instance remove
+    instarg_remove = instarg_subp.add_parser("remove", help="remove instance")
+    instarg_remove.add_argument("name",
+                                help="name of instance to remove")
+    instarg_remove.add_argument("-f",
+                                "--force",
+                                help="Stop the instance if it's running",
+                                action="store_true")
+    instarg_remove.set_defaults(func=_remove_instance)
 
-    # instance destroy
-    instarg_destroy = instarg_subp.add_parser("destroy", help="destroy instance")
+    instarg_destroy = instarg_subp.add_parser("destroy", help="deprecated alias for remove")
     instarg_destroy.add_argument("name",
-                                 help="name of instance to destroy")
-    instarg_destroy.set_defaults(func=_destroy_instance)
-
+                                 help="name of instance to remove")
+    instarg_destroy.add_argument("-f",
+                                 "--force",
+                                 help="Stop the instance if it's running",
+                                 action="store_true")
+    instarg_destroy.set_defaults(func=_remove_instance)
+    # instance reboot
+    instarg_reboot = instarg_subp.add_parser("reboot", help="reboot instance")
+    instarg_reboot.add_argument("name",
+                                help="name of instance to reboot")
+    instarg_reboot.add_argument("--timeout",
+                                help="Time (in seconds) to wait for boot to "
+                                "complete before completion, setting to 0"
+                                " disables all waiting.",
+                                type=int,
+                                default=config_data.BOOT_TIMEOUT)
+    instarg_reboot.set_defaults(func=_reboot_instance)
     # instance create
     instarg_create = instarg_subp.add_parser("create", help="create instance")
     instarg_create.set_defaults(func=_create_instance)
@@ -275,11 +310,16 @@ def get_argparser():
     imgarg_list = imgarg_subp.add_parser("list", help="list images")
     imgarg_list.set_defaults(func=_list_image)
 
-    # image destroy
-    imgarg_destroy = imgarg_subp.add_parser("destroy", help="destroy image")
+    # image remove
+    imgarg_remove = imgarg_subp.add_parser('remove', help="remove image")
+    imgarg_remove.add_argument("name",
+                               help="name of image to remove")
+    imgarg_remove.set_defaults(func=_remove_image)
+
+    imgarg_destroy = imgarg_subp.add_parser('destroy', help="deprecated alias for remove")
     imgarg_destroy.add_argument("name",
-                                help="name of image to destroy")
-    imgarg_destroy.set_defaults(func=_destroy_image)
+                                help="name of image to remove")
+    imgarg_destroy.set_defaults(func=_remove_image)
 
     return parser
 
