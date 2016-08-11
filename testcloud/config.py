@@ -4,7 +4,9 @@ import imp
 import testcloud
 
 
-CONF_DIRS = [os.path.abspath(os.path.dirname(testcloud.__file__)) + '/../conf',
+DEFAULT_CONF_DIR = os.path.abspath(os.path.dirname(testcloud.__file__)) + '/../conf'
+
+CONF_DIRS = [DEFAULT_CONF_DIR,
              '{}/.config/testcloud'.format(os.environ['HOME']),
              '/etc/testcloud'
              ]
@@ -91,7 +93,7 @@ class ConfigData(object):
     STORE_DIR = "/var/lib/testcloud/backingstores"
 
     # libvirt domain XML Template
-    # This lives in the DATA_DIR
+    # This lives either in the DEFAULT_CONF_DIR or DATA_DIR
     XML_TEMPLATE = "domain-template.jinja"
 
     # Data for cloud-init
