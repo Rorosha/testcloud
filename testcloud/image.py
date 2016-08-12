@@ -157,9 +157,12 @@ class Image(object):
         except OSError:
             log.error("Problem writing to {}.".format(config_data.PRISTINE))
 
-    def _handle_file_url(self, source_path, dest_path):
+    def _handle_file_url(self, source_path, dest_path, copy=True):
         if not os.path.exists(dest_path):
-            shutil.copy(source_path, dest_path)
+            if copy:
+                shutil.copy(source_path, dest_path)
+            else:
+                subprocess.check_call(['ln', '-s', '-f', source_path, dest_path])
 
     def _adjust_image_selinux(self, image_path):
         """If SElinux is enabled on the system, change the context of that image
@@ -176,6 +179,7 @@ class Image(object):
             return
 
         image_context = subprocess.call(['chcon',
+                                         '-h',
                                          '-u', 'system_u',
                                          '-t', 'virt_content_t',
                                          image_path])
@@ -186,16 +190,20 @@ class Image(object):
             log.error('Error while changing SELinux context on '
                       'image {}'.format(image_path))
 
-    def prepare(self):
+    def prepare(self, copy=True):
         """Prepare the image for local use by either downloading the image from
-        a remote location or copying it into the image store from a locally
-        mounted filesystem"""
+        a remote location or copying/linking it into the image store from a locally
+        mounted filesystem
+
+        :param copy: if true image will be copied to backingstores else symlink is created
+                     in backingstores instead of copying. Only for file:// type of urls.
+        """
 
         log.debug("Local downloads will be stored in {}.".format(
             config_data.STORE_DIR))
 
         if self.uri_type == 'file':
-            self._handle_file_url(self.remote_path, self.local_path)
+            self._handle_file_url(self.remote_path, self.local_path, copy=copy)
         else:
             if not os.path.exists(self.local_path):
                 self._download_remote_image(self.remote_path, self.local_path)
