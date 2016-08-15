@@ -64,11 +64,11 @@ def _list_instances():
     return instance_list
 
 
-def _list_system_domains(connection):
+def _list_domains(connection):
     """List known domains for a given hypervisor connection.
 
     :param connection: libvirt compatible hypervisor connection
-    :returns: dictionary mapping of name:state
+    :returns: dictionary mapping of name -> state
     :rtype: dict
     """
 
@@ -78,24 +78,28 @@ def _list_system_domains(connection):
         # the libvirt docs seem to indicate that the second int is for state
         # details, only used when state is ERROR, so only looking at the first
         # int returned for domain.state()
-
         domains[domain.name()] = DOMAIN_STATUS_ENUM[domain.state()[0]]
 
     return domains
 
 
-def find_instance(name, image=None):
+def find_instance(name, image=None, connection='qemu:///system'):
     """Find an instance using a given name and image, if it exists.
 
-    :param name: name of instance to find
-    :param image: :py:class:`testcloud.image.Image`
-    :returns: :py:class:`Instance` if the instance exists, None if it doesn't
+    Please note that ``connection`` is not taken into account when searching for the instance, but
+    the instance object returned has the specified connection set. It's your responsibility to
+    make sure the provided connection is valid for this instance.
+
+    :param str name: name of instance to find
+    :param image: instance of :py:class:`testcloud.image.Image`
+    :param str connection: name of libvirt connection uri
+    :returns: :py:class:`Instance` if the instance exists, ``None`` if it doesn't
     """
 
     instances = _list_instances()
     for inst in instances:
         if inst['name'] == name:
-            return Instance(name, image)
+            return Instance(name, image, connection)
     return None
 
 
@@ -105,13 +109,13 @@ def list_instances(connection='qemu:///system'):
     :param connection: libvirt compatible connection to use when listing domains
     :returns: dictionary of instance_name to domain_state mapping
     """
-    system_domains = _list_system_domains(connection)
+    domains = _list_domains(connection)
     all_instances = _list_instances()
 
     instances = []
 
     for instance in all_instances:
-        if instance['name'] not in system_domains.keys():
+        if instance['name'] not in domains.keys():
             log.warn('{} is not registered, might want to delete it.'.format(instance['name']))
             instance['state'] = 'de-sync'
 
@@ -120,7 +124,7 @@ def list_instances(connection='qemu:///system'):
         else:
 
             # Add the state of the instance
-            instance['state'] = system_domains[instance['name']]
+            instance['state'] = domains[instance['name']]
 
             instances.append(instance)
 
@@ -132,9 +136,10 @@ class Instance(object):
     defined on the local system, using an existing :py:class:`Image`.
     """
 
-    def __init__(self, name, image=None, hostname=None):
+    def __init__(self, name, image=None, connection='qemu:///system', hostname=None):
         self.name = name
         self.image = image
+        self.connection = connection
         self.path = "{}/instances/{}".format(config_data.DATA_DIR, self.name)
         self.seed_path = "{}/{}-seed.img".format(self.path, self.name)
         self.meta_path = "{}/meta".format(self.path)
@@ -287,10 +292,10 @@ class Instance(object):
 
         subprocess.call(imgcreate_command)
 
-    def _get_domain(self, hypervisor="qemu:///system"):
+    def _get_domain(self):
         """Create the connection to libvirt to control instance lifecycle.
         returns: libvirt domain object"""
-        conn = libvirt.open(hypervisor)
+        conn = libvirt.open(self.connection)
         return conn.lookupByName(self.name)
 
     def create_ip_file(self, ip):
@@ -338,7 +343,7 @@ class Instance(object):
         with open(self.xml_path, 'r') as xml_file:
             domain_xml = ''.join([x for x in xml_file.readlines()])
 
-        conn = libvirt.open('qemu:///system')
+        conn = libvirt.open(self.connection)
         conn.defineXML(domain_xml)
 
     def expand_qcow(self, size="+10G"):
@@ -379,7 +384,7 @@ class Instance(object):
                                         while looking for a network interface
         """
 
-        log.debug("Creating domain {}".format(self.name))
+        log.debug("Creating instance {}".format(self.name))
         dom = self._get_domain()
         create_status = dom.create()
 
@@ -390,7 +395,7 @@ class Instance(object):
             raise TestcloudInstanceError("Instance {} did not start "
                                          "successfully, see libvirt logs for "
                                          "details".format(self.name))
-        log.debug("Polling domain for active network interface")
+        log.debug("Polling instance for active network interface")
 
         poll_tick = 0.5
         timeout_ticks = timeout / poll_tick
@@ -420,16 +425,14 @@ class Instance(object):
 
         log.debug("stopping instance {}.".format(self.name))
 
-        system_domains = _list_system_domains("qemu:///system")
-        domain_exists = self.name in system_domains
+        domains = _list_domains(self.connection)
+        domain_exists = self.name in domains
 
         if not domain_exists:
-            raise TestcloudInstanceError(
-                    "Instance doesn't exist: {}".format(self.name))
+            raise TestcloudInstanceError("Instance doesn't exist: {}".format(self.name))
 
-        if system_domains[self.name] == 'shutoff':
-            log.debug('Instance already shut off, not stopping: {}'.format(
-                self.name))
+        if domains[self.name] == 'shutoff':
+            log.debug('Instance already shut off, not stopping: {}'.format(self.name))
             return
 
         # stop (destroy) the vm
@@ -447,11 +450,10 @@ class Instance(object):
 
         # this should be changed if/when we start supporting configurable
         # libvirt connections
-        system_domains = _list_system_domains("qemu:///system")
-
+        domains = _list_domains(self.connection)
         # Check that the domain is registered with libvirt
-        domain_exists = self.name in system_domains
-        if domain_exists and system_domains[self.name] == 'running':
+        domain_exists = self.name in domains
+        if domain_exists and domains[self.name] == 'running':
 
             if autostop:
                 self.stop()
@@ -463,7 +465,10 @@ class Instance(object):
         # remove from libvirt, assuming that it's stopped already
         if domain_exists:
             self._get_domain().undefine()
-            log.debug("Unregistering domain from libvirt.")
+            log.debug("Unregistering instance from libvirt.")
+        else:
+            log.warn('Instance "{}" not found in libvirt "{}". Was it removed already? Should '
+                     'you have used a different connection?'.format(self.name, self.connection))
 
         log.debug("removing instance {} from disk".format(self.path))
 

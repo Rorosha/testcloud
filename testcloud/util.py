@@ -21,10 +21,10 @@ log = logging.getLogger('testcloud.util')
 config_data = config.get_config()
 
 
-def get_vm_xml(instance_name):
+def get_vm_xml(instance_name, connection='qemu:///system'):
     """Query virsh for the xml of an instance by name."""
 
-    con = libvirt.openReadOnly('qemu:///system')
+    con = libvirt.openReadOnly(connection)
     try:
         domain = con.lookupByName(instance_name)
 

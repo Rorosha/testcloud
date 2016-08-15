@@ -41,7 +41,7 @@ def _list_instance(args):
 
     :param args: args from argparser
     """
-    instances = instance.list_instances()
+    instances = instance.list_instances(args.connection)
 
     print("{:<16} {:^30}     {:<10}".format("Name", "IP", "State"))
     print("-"*60)
@@ -66,7 +66,8 @@ def _create_instance(args):
     tc_image = image.Image(args.url)
     tc_image.prepare()
 
-    existing_instance = instance.find_instance(args.name, tc_image)
+    existing_instance = instance.find_instance(args.name, image=tc_image,
+                                               connection=args.connection)
 
     # can't create existing instances
     if existing_instance is not None:
@@ -78,7 +79,7 @@ def _create_instance(args):
                                                        args.name))
 
     else:
-        tc_instance = instance.Instance(args.name, tc_image)
+        tc_instance = instance.Instance(args.name, image=tc_image, connection=args.connection)
 
         # set ram size
         tc_instance.ram = args.ram
@@ -96,7 +97,7 @@ def _create_instance(args):
         tc_instance.start(args.timeout)
 
         # find vm ip
-        vm_ip = find_vm_ip(args.name)
+        vm_ip = find_vm_ip(args.name, args.connection)
 
         # Write ip to file
         tc_instance.create_ip_file(vm_ip)
@@ -111,7 +112,7 @@ def _start_instance(args):
     """
     log.debug("start instance: {}".format(args.name))
 
-    tc_instance = instance.find_instance(args.name)
+    tc_instance = instance.find_instance(args.name, connection=args.connection)
 
     if tc_instance is None:
         raise TestcloudCliError("Cannot start instance {} because it does "
@@ -131,7 +132,7 @@ def _stop_instance(args):
     """
     log.debug("stop instance: {}".format(args.name))
 
-    tc_instance = instance.find_instance(args.name)
+    tc_instance = instance.find_instance(args.name, connection=args.connection)
 
     if tc_instance is None:
         raise TestcloudCliError("Cannot stop instance {} because it does "
@@ -148,7 +149,7 @@ def _remove_instance(args):
     """
     log.debug("remove instance: {}".format(args.name))
 
-    tc_instance = instance.find_instance(args.name)
+    tc_instance = instance.find_instance(args.name, connection=args.connection)
 
     if tc_instance is None:
         raise TestcloudCliError("Cannot remove instance {} because it does "
@@ -342,16 +343,17 @@ def main():
     args.func(args)
 
 
-def find_vm_ip(name):
+def find_vm_ip(name, connection='qemu:///system'):
     """Finds the ip of a local vm given it's name used by libvirt.
 
-    :param name: name of the VM (as used by libvirt)
+    :param str name: name of the VM (as used by libvirt)
+    :param str connection: name of the libvirt connection uri
     :returns: ip address of VM
     :rtype: str
     """
 
     for _ in xrange(100):
-        vm_xml = util.get_vm_xml(name)
+        vm_xml = util.get_vm_xml(name, connection)
         if vm_xml is not None:
             break
 
