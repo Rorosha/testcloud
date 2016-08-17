@@ -311,7 +311,8 @@ class Instance(object):
         """
 
         # Set up the jinja environment
-        jinjaLoader = jinja2.FileSystemLoader(searchpath=config_data.DATA_DIR)
+        jinjaLoader = jinja2.FileSystemLoader(searchpath=[config.DEFAULT_CONF_DIR,
+                                                          config_data.DATA_DIR])
         jinjaEnv = jinja2.Environment(loader=jinjaLoader)
         xml_template = jinjaEnv.get_template(config_data.XML_TEMPLATE)
 
