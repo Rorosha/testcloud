@@ -28,7 +28,7 @@ config_data = config.get_config()
 
 log = logging.getLogger('testcloud.instance')
 
-# mapping libvirt constants to a known set of strings
+#: mapping domain state constants from libvirt to a known set of strings
 DOMAIN_STATUS_ENUM = {libvirt.VIR_DOMAIN_NOSTATE: 'no state',
                       libvirt.VIR_DOMAIN_RUNNING: 'running',
                       libvirt.VIR_DOMAIN_BLOCKED: 'blocked',
@@ -75,12 +75,40 @@ def _list_domains(connection):
     domains = {}
     conn = libvirt.openReadOnly(connection)
     for domain in conn.listAllDomains():
-        # the libvirt docs seem to indicate that the second int is for state
-        # details, only used when state is ERROR, so only looking at the first
-        # int returned for domain.state()
-        domains[domain.name()] = DOMAIN_STATUS_ENUM[domain.state()[0]]
+        try:
+            # the libvirt docs seem to indicate that the second int is for state
+            # details, only used when state is ERROR, so only looking at the first
+            # int returned for domain.state()
+            domains[domain.name()] = DOMAIN_STATUS_ENUM[domain.state()[0]]
+        except libvirt.libvirtError as e:
+            if e.get_error_code() == libvirt.VIR_ERR_NO_DOMAIN:
+                # the domain disappeared in the meantime, just ignore
+                continue
+            else:
+                raise e
 
     return domains
+
+
+def _find_domain(name, connection):
+    '''Find whether a domain exists and get its state.
+
+    :param str name: name of the domain to find
+    :param str connection: name of libvirt connection uri
+    :returns: domain state from ``DOMAIN_STATUS_ENUM`` if domain exists, or ``None`` if it doesn't
+    :rtype: str or None
+    '''
+
+    conn = libvirt.openReadOnly(connection)
+    try:
+        domain = conn.lookupByName(name)
+        return DOMAIN_STATUS_ENUM[domain.state()[0]]
+    except libvirt.libvirtError as e:
+        if e.get_error_code() == libvirt.VIR_ERR_NO_DOMAIN:
+                # no such domain
+                return None
+        else:
+            raise e
 
 
 def find_instance(name, image=None, connection='qemu:///system'):
@@ -425,13 +453,12 @@ class Instance(object):
 
         log.debug("stopping instance {}.".format(self.name))
 
-        domains = _list_domains(self.connection)
-        domain_exists = self.name in domains
+        domain_state = _find_domain(self.name, self.connection)
 
-        if not domain_exists:
+        if domain_state is None:
             raise TestcloudInstanceError("Instance doesn't exist: {}".format(self.name))
 
-        if domains[self.name] == 'shutoff':
+        if domain_state == 'shutoff':
             log.debug('Instance already shut off, not stopping: {}'.format(self.name))
             return
 
@@ -450,11 +477,9 @@ class Instance(object):
 
         # this should be changed if/when we start supporting configurable
         # libvirt connections
-        domains = _list_domains(self.connection)
-        # Check that the domain is registered with libvirt
-        domain_exists = self.name in domains
-        if domain_exists and domains[self.name] == 'running':
+        domain_state = _find_domain(self.name, self.connection)
 
+        if domain_state == 'running':
             if autostop:
                 self.stop()
             else:
@@ -463,7 +488,7 @@ class Instance(object):
                     "instance before removing.".format(self.name))
 
         # remove from libvirt, assuming that it's stopped already
-        if domain_exists:
+        if domain_state is not None:
             self._get_domain().undefine()
             log.debug("Unregistering instance from libvirt.")
         else:
