@@ -15,8 +15,9 @@ Packages:
  - libguestfs-tools
  - python-requests (for whatever python version you're running)
 
-Optional:
- - py.test (if you plan on running or working on the tests)
+Optional (if you plan on running or working on the tests):
+ - python2-pytest
+ - python-pytest-cov
 
 All of these packages are in the Fedora repos (and likely other distros as
 well).
@@ -122,7 +123,7 @@ There is a small testsuite you can run with:
 
 .. code:: bash
 
-    py.test test/
+    py.test
 
 This is a good place to contribute if you're looking to help out.
 

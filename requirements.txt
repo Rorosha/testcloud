@@ -1,0 +1,9 @@
+# This is a list of pypi packages to be installed into virtualenv. Alternatively,
+# you can install these as RPMs instead of pypi packages. See README.
+
+libvirt-python
+requests
+
+# Test suite requirements
+pytest
+pytest-cov
