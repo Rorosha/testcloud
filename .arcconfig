@@ -1,6 +1,6 @@
 {
     "project_id" : "testCloud",
-    "conduit_uri" : "https://phab.qadevel.cloud.fedoraproject.org",
+    "conduit_uri" : "https://phab.qa.fedoraproject.org",
     "arc.land.onto.default" : "dev",
     "arc.feature.start.default" : "dev",
     "unit.engine" : "PytestTestEngine"
