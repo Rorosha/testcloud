@@ -1,11 +1,17 @@
-/* testcloud is often used on headless machines (Taskotron uses it this way)
-where the user only has ssh access to the virt host. This rule file allows
-users in the 'testcloud' group to be able to manipulate spawned machines over
-ssh. */
+/* If you are running testcloud as a non-administrative user (ie. not in wheel) or
+on a system that doesn't have a polkit agent running (custom setups, headless
+systems etc.), you may need to adjust local polkit configuration to allow
+non-admin users to manage VMs with libvirt.
+
+Copy this to /etc/polkit-1/rules.d/ . Then restart polkit
+$ systemctl restart polkit
+and if the user in question is a member of the unix group 'testcloud', that
+user should be able to run testcloud with no additional permissions.
+*/
 
 polkit.addRule(function(action, subject) {
     if (action.id == "org.libvirt.unix.manage" &&
         subject.isInGroup('testcloud')) {
-	    return polkit.Result.YES;	
+            return polkit.Result.YES;
         }
     });

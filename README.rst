@@ -34,15 +34,9 @@ of the current refactoring/transition process.
 
 If you are running testcloud as a non-administrative user (ie. not in wheel) or
 on a system that doesn't have a polkit agent running (custom setups, headless
-systems etc.), you may need to adjust local polkit configuration to allow non-root
-users to manage VMs with libvirt. Add the following data into ``/etc/polkit-1/localauthority/50-local.d/50-nonrootlivirt.pkla``::
-
-  [nonroot libvirt system connection]
-  Identity=unix-group:testcloud
-  Action=org.libvirt.unix.manage
-  ResultActive=yes
-  ResultInactive=yes
-  ResultAny=yes
+systems etc.), you may need to adjust local polkit configuration to allow
+non-admin users to manage VMs with libvirt. Look into
+``conf/99-testcloud-nonroot-libvirt-access.rules`` file.
 
 After writing that file, restart polkit (``systemctl restart polkit``) and if
 the user in question is a member of the unix group ``testcloud``, that user
