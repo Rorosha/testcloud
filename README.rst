@@ -38,10 +38,6 @@ systems etc.), you may need to adjust local polkit configuration to allow
 non-admin users to manage VMs with libvirt. Look into
 ``conf/99-testcloud-nonroot-libvirt-access.rules`` file.
 
-After writing that file, restart polkit (``systemctl restart polkit``) and if
-the user in question is a member of the unix group ``testcloud``, that user
-should be able to run testcloud with no additional permissions.
-
 Basic Usage
 -----------
 
