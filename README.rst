@@ -15,8 +15,9 @@ Packages:
  - libguestfs-tools
  - python-requests (for whatever python version you're running)
 
-Optional:
- - py.test (if you plan on running or working on the tests)
+Optional (if you plan on running or working on the tests):
+ - python2-pytest
+ - python-pytest-cov
 
 All of these packages are in the Fedora repos (and likely other distros as
 well).
@@ -33,19 +34,9 @@ of the current refactoring/transition process.
 
 If you are running testcloud as a non-administrative user (ie. not in wheel) or
 on a system that doesn't have a polkit agent running (custom setups, headless
-systems etc.), you may need to adjust local polkit configuration to allow non-root
-users to manage VMs with libvirt. Add the following data into ``/etc/polkit-1/localauthority/50-local.d/50-nonrootlivirt.pkla``::
-
-  [nonroot libvirt system connection]
-  Identity=unix-group:testcloud
-  Action=org.libvirt.unix.manage
-  ResultActive=yes
-  ResultInactive=yes
-  ResultAny=yes
-
-After writing that file, restart polkit (``systemctl restart polkit``) and if
-the user in question is a member of the unix group ``testcloud``, that user
-should be able to run testcloud with no additional permissions.
+systems etc.), you may need to adjust local polkit configuration to allow
+non-admin users to manage VMs with libvirt. Look into
+``conf/99-testcloud-nonroot-libvirt-access.rules`` file.
 
 Basic Usage
 -----------
@@ -122,7 +113,7 @@ There is a small testsuite you can run with:
 
 .. code:: bash
 
-    py.test test/
+    py.test
 
 This is a good place to contribute if you're looking to help out.
 
@@ -130,7 +121,7 @@ Issue Tracking and Roadmap
 --------------------------
 
 Our project tracker is on the Fedora QA-devel
-`Phabricator <https://phab.qadevel.cloud.fedoraproject.org/tag/testcloud/>`_
+`Phabricator <https://phab.qa.fedoraproject.org/tag/testcloud/>`_
 instance.
 
 Credit

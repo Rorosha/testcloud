@@ -19,3 +19,4 @@ conf/settings.py
 
 # unit testing
 /.coverage
+/.cache
