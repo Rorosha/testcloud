@@ -5,6 +5,7 @@ import os
 
 here = os.path.abspath(os.path.dirname(__file__))
 
+
 def read(*parts):
     return codecs.open(os.path.join(here, *parts), 'r').read()
 
@@ -20,10 +21,13 @@ def find_version(*file_paths):
 
 class PyTest(Command):
     user_options = []
+
     def initialize_options(self):
         pass
+
     def finalize_options(self):
         pass
+
     def run(self):
         import subprocess
         errno = subprocess.call(['py.test'])
@@ -43,4 +47,9 @@ setup(name='testcloud',
       include_package_data=True,
       cmdclass={'test': PyTest},
       entry_points=dict(console_scripts=["testcloud=testcloud.cli:main"]),
+      install_requires=[
+          'Jinja2',
+          'libvirt-python',
+          'requests',
+      ],
       )
